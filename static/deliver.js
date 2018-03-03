@@ -1,15 +1,53 @@
+Vue.component('setDay', {
+    props: ['days'],
+    data: function() {
+        return {
+            'selectedDay': 'Set day'
+        }
+    },
+    template: `<div class="dropdown">
+                  <button class="btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {{selectedDay}}
+                  </button>
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a @click="select(day)" v-for="day in days" class="dropdown-item" href="#">{{day}}</a>
+                  </div>
+                </div>`,
+    methods: {
+        select: function(day) {
+            this.selectedDay = day
+        }
+    }
+})
+
 Vue.component('customer-item', {
     props: ['customer', 'showingName'],
-    template: '<tr><td v-if="showingName">{{customer.name}}</td><td v-else>{{customer.address}}</td><td>{{customer.confirmed}}</td></tr>'
+    template: `<tr>
+                <td>{{customer.name}}</td>
+                <td><setDay v-bind:days="customer.days"/></td>
+                <td>{{customer.confirmed}}</td>
+               </tr>`
 })
 
 
 Vue.component('customers', {
-    template: '<div id="customers"><table class="u-full-width"><thead><tr><th><a @click="showName" class="button">Name</a>  <a @click="showAddr" class="button">Address</a></th><th>Confirmed</th></tr></thead><tbody><customer-item v-for="customer in customers" v-bind:showingName="showingName" v-bind:customer="customer"></customer-item></tbody></table></div>',
+    template: `<div id="customers">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Pickup Day</th>
+                            <th scope="col">Confirmed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <customer-item v-for="customer in customers" v-bind:showingName="showingName" v-bind:customer="customer">
+                        </customer-item>
+                    </tbody>
+                </table></div>`,
     data: function() {
         return {
-            'customers': [],
-            'showingName': true
+            'customers': []
         }
     },
     mounted: function() {
@@ -19,18 +57,11 @@ Vue.component('customers', {
                 return {
                     'name': row[0],
                     'address': row[2],
-                    'confirmed': row[8] == 'Yes' ? true : false
+                    'confirmed': row[8] == 'Yes' ? true : false,
+                    'days': row[3].split(', ')
                 }
             })
         }.bind(this))
-    },
-    methods: {
-        showName: function() {
-            this.showingName = true
-        },
-        showAddr: function() {
-            this.showingName = false
-        }
     }
 })
 
