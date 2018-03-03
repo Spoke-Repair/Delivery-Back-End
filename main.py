@@ -69,7 +69,7 @@ def home():
 
     # Open spreadsheet and then workseet
     sh = gc.open_by_key('1M442BGZL1WA2o1Te_pBFQKZc1p06WEAxEUUvIM3dRz8')
-    # wks = sh['Apps Script Data']
+    wks = sh['Apps Script Data']
     print(sh)
 
     # Update a cell with value (just to let him know values is updated ;) )
