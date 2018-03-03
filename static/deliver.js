@@ -1,5 +1,7 @@
 Vue.prototype.$eventHub = new Vue();
 
+const _DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 Vue.component('setDay', {
     props: ['days'],
     data: function() {
@@ -7,12 +9,23 @@ Vue.component('setDay', {
             'selectedDay': 'Set day'
         }
     },
+    computed: {
+        cleanDays: function() {
+            var res = []
+            var daysSet = new Set(this.days)
+            for (var i = 0; i < _DAYS.length; i++) {
+                if (daysSet.has(_DAYS[i]))
+                    res.push(_DAYS[i].slice(0, 3));
+            }
+            return res;
+        }
+    },
     template: `<div class="dropdown">
                   <button class="btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     {{selectedDay}}
                   </button>
                   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <a @click="select(day)" v-for="day in days" class="dropdown-item" href="#">{{day}}</a>
+                    <a @click="select(day)" v-for="day in cleanDays" class="dropdown-item" href="#">{{day}}</a>
                   </div>
                 </div>`,
     methods: {
@@ -24,7 +37,7 @@ Vue.component('setDay', {
 })
 
 Vue.component('customer-item', {
-    props: ['customer', 'showingName'],
+    props: ['customer'],
     template: `<tr>
                 <td>{{customer.name}}</td>
                 <td><setDay v-bind:days="customer.days"/></td>
@@ -47,7 +60,7 @@ Vue.component('customers', {
                         </tr>
                     </thead>
                     <tbody>
-                        <customer-item v-for="customer in customers" v-bind:showingName="showingName" v-bind:customer="customer">
+                        <customer-item v-for="customer in customers" v-bind:customer="customer">
                         </customer-item>
                     </tbody>
                 </table></div>`,
@@ -70,6 +83,7 @@ Vue.component('customers', {
             })
         }.bind(this))
 
+        // Check whether days have been selected to be submitted. If so, make the submit button appear to confirm.
         this.$eventHub.$on('dirtyDay', function() {
             this.dirtyDay = true
         }.bind(this));
