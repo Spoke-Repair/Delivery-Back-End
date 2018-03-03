@@ -1,3 +1,5 @@
+Vue.prototype.$eventHub = new Vue();
+
 Vue.component('setDay', {
     props: ['days'],
     data: function() {
@@ -16,6 +18,7 @@ Vue.component('setDay', {
     methods: {
         select: function(day) {
             this.selectedDay = day
+            this.$eventHub.$emit('dirtyDay');
         }
     }
 })
@@ -36,7 +39,10 @@ Vue.component('customers', {
                     <thead>
                         <tr>
                             <th scope="col">Name</th>
-                            <th scope="col">Pickup Day</th>
+                            <th scope="col">
+                                <button type="button" class="btn btn-primary" v-if="dirtyDay">Submit pickup days</button>
+                                <span v-else>Pickup Day</span>
+                            </th>
                             <th scope="col">Confirmed</th>
                         </tr>
                     </thead>
@@ -47,7 +53,8 @@ Vue.component('customers', {
                 </table></div>`,
     data: function() {
         return {
-            'customers': []
+            'customers': [],
+            'dirtyDay': false
         }
     },
     mounted: function() {
@@ -62,6 +69,10 @@ Vue.component('customers', {
                 }
             })
         }.bind(this))
+
+        this.$eventHub.$on('dirtyDay', function() {
+            this.dirtyDay = true
+        }.bind(this));
     }
 })
 
