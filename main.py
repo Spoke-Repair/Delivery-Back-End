@@ -29,6 +29,8 @@ from flask import jsonify
 app = Flask(__name__)
 # [END create_app]
 
+# for documentation on setting up pygsheets:
+# https://github.com/nithinmurali/pygsheets
 import pygsheets
 gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
 sh = gc.open_by_key('1M442BGZL1WA2o1Te_pBFQKZc1p06WEAxEUUvIM3dRz8')
