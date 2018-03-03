@@ -21,11 +21,17 @@ from flask import Flask, render_template, request
 import requests
 from requests_toolbelt.adapters import appengine
 appengine.monkeypatch()
+
+from flask import jsonify
 # [END imports]
 
 # [START create_app]
 app = Flask(__name__)
 # [END create_app]
+
+import pygsheets
+gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
+sh = gc.open_by_key('1M442BGZL1WA2o1Te_pBFQKZc1p06WEAxEUUvIM3dRz8')
 
 
 # [START form]
@@ -33,7 +39,6 @@ app = Flask(__name__)
 def form():
     return render_template('form.html')
 # [END form]
-
 
 # [START submitted]
 @app.route('/submitted', methods=['POST'])
@@ -61,16 +66,25 @@ def server_error(e):
     return 'An internal error occurred.', 500
 # [END app]
 
-@app.route('/')
-def home():
-    import pygsheets
-
-    gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
-
+@app.route('/customer-data')
+def customerData():
     # Open spreadsheet and then workseet
-    sh = gc.open_by_key('1M442BGZL1WA2o1Te_pBFQKZc1p06WEAxEUUvIM3dRz8')
-    wks = sh['Apps Script Data']
-    print(sh)
+    wks = sh.worksheet_by_title('Apps Script Data')
+    cell_list = wks.range('A2:I40', returnas="matrix")
+
+    entries = []
+    for row in cell_list:
+        name = row[0].encode('utf-8')
+        if not name:
+            break
+        entries.append([x.encode('utf-8') for x in row])
+
+    return jsonify(entries)
+
+@app.route('/deliver')
+def deliver():
+    return render_template('deliver.html')
+    # print(cell_list)
 
     # Update a cell with value (just to let him know values is updated ;) )
     # wks.update_cell('A1', "Hey yank this numpy array")
