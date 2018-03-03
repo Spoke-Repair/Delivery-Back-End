@@ -13,10 +13,14 @@
 # limitations under the License.
 
 # [START app]
+
 import logging
 
 # [START imports]
 from flask import Flask, render_template, request
+import requests
+from requests_toolbelt.adapters import appengine
+appengine.monkeypatch()
 # [END imports]
 
 # [START create_app]
@@ -56,3 +60,23 @@ def server_error(e):
     logging.exception('An error occurred during a request.')
     return 'An internal error occurred.', 500
 # [END app]
+
+@app.route('/')
+def home():
+    import pygsheets
+
+    gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
+
+    # Open spreadsheet and then workseet
+    sh = gc.open_by_key('1M442BGZL1WA2o1Te_pBFQKZc1p06WEAxEUUvIM3dRz8')
+    # wks = sh['Apps Script Data']
+    print(sh)
+
+    # Update a cell with value (just to let him know values is updated ;) )
+    # wks.update_cell('A1', "Hey yank this numpy array")
+
+    # update the sheet with array
+    # wks.update_cells('A2', my_nparray.to_list())
+
+    # share the sheet with your friend
+    # sh.share("myFriend@gmail.com")

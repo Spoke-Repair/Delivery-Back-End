@@ -14,3 +14,11 @@ Before running or deploying this application, install the dependencies using
     pip install -t lib -r requirements.txt
 
 For more information, see the [App Engine Standard README](../../README.md)
+
+-----
+
+## Other config stuff:
+
+Repo is mirrored on GCP project id: `project-id-4582879013784481480`:
+at `~/src/project-id-4582879013784481480/python_gae_quickstart-2018-03-02-16-53/appengine/standard/hello_world/src/verdant-
+ethos-196923/python_gae_quickstart-2018-03-02-17-08/appengine/standard/flask/tutorial`.
