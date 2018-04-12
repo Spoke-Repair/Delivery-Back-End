@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Flask on GAE tutorial: https://cloud.google.com/appengine/docs/standard/python/getting-started/python-standard-env
+
 # [START app]
 
 import logging
@@ -76,11 +78,12 @@ def customerData():
 
     entries = []
     for row in cell_list:
-        name = row[0].encode('utf-8')
+        name = row[0]
         if not name:
             break
-        entries.append([x.encode('utf-8') for x in row])
+        entries.append([x for x in row])
 
+    print(entries)
     return jsonify(entries)
 
 @app.route('/deliver')

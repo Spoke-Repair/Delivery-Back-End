@@ -22,3 +22,17 @@ For more information, see the [App Engine Standard README](../../README.md)
 Repo is mirrored on GCP project id: `project-id-4582879013784481480`:
 at `~/src/project-id-4582879013784481480/python_gae_quickstart-2018-03-02-16-53/appengine/standard/hello_world/src/verdant-
 ethos-196923/python_gae_quickstart-2018-03-02-17-08/appengine/standard/flask/tutorial`.
+
+## To start
+
+Authenticate on google:
+```
+$ python gsheets_auth.py
+```
+
+Run the flask server:
+
+```
+$ export FLASK_APP=main.py
+$ flask run
+```
