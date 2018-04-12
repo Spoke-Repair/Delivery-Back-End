@@ -86,9 +86,9 @@ def customerData():
     print(entries)
     return jsonify(entries)
 
-@app.route('/deliver')
-def deliver():
-    return render_template('deliver.html')
+# @app.route('/deliver')
+# def deliver():
+#     return render_template('deliver.html')
     # print(cell_list)
 
     # Update a cell with value (just to let him know values is updated ;) )
@@ -99,3 +99,7 @@ def deliver():
 
     # share the sheet with your friend
     # sh.share("myFriend@gmail.com")
+
+@app.route('/complete')
+def complete():
+    return render_template('repair_complete.html')
