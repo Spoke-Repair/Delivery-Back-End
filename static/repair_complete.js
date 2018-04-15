@@ -5,7 +5,7 @@ Vue.component('customer-item', {
     template: `<tr>
                 <td>{{customer.name}}</td>
                 <td>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-datepicker" v-if="customer.date == undefined">Update</button>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-datepicker" v-if="customer.date == undefined" v-on:click="changeActiveCustomer">Update</button>
                     <p v-else>{{customer.date}}</p>
                 </td>
                 <td>
@@ -14,8 +14,8 @@ Vue.component('customer-item', {
                 </td>
                </tr>`,
     methods: {
-        'updateActiveCustomer': function() {
-            this.activeCustomer = this.customer.name;
+        'changeActiveCustomer': function() {
+            this.activeCustomer.name = this.customer.name;
         }
     }
 })
@@ -84,7 +84,7 @@ Vue.component('date-update-modal', {
 
 var deliveryView = new Vue({
     el: '#customers',
-    template: '<div><date-update-modal/><customers v-bind:activeCustomer="activeCustomer"/></div>'
+    template: '<div><date-update-modal v-bind:activeCustomer="activeCustomer"/><customers v-bind:activeCustomer="activeCustomer"/></div>',
     data: function() {
         return {
             'activeCustomer': {'name': ""}
