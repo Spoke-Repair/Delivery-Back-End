@@ -5,3 +5,19 @@
 #customers{
 	margin:30px 30px;
 }
+
+.overlay {
+	width:100vw;
+	height:100vh;
+	background-color: rgba(0, 0, 0, 0.2);
+	position:fixed;
+	z-index:99;
+}
+
+.modal-datepicker {
+	position:relative;
+	margin: 0 auto;
+	height:70%;
+	width:70%;
+	background-color:white;
+}
