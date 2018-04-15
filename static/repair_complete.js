@@ -6,7 +6,7 @@ Vue.component('customer-item', {
                 <td>{{customer.name}}</td>
                 <td>
                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-datepicker" v-if="customer.date == undefined" v-on:click="changeActiveCustomer">Update</button>
-                    <p v-else>{{customer.date}}</p>
+                    <p v-else>{{formattedDate}}</p>
                 </td>
                 <td>
                     <button type="button" class="btn btn-primary" v-if="customer.completed">Finish</button>
@@ -22,7 +22,13 @@ Vue.component('customer-item', {
         this.$eventHub.$on('activeCustomerDateChanged', function(activeCustomer) {
             if (this.customer.name == activeCustomer.name)
                 this.customer.date = activeCustomer.date;
+            // TODO: logic to update the sheet with the correct date.
         }.bind(this));
+    },
+    computed: {
+        'formattedDate': function() {
+            return this.customer.date.toLocaleDateString('en-US')
+        }
     }
 })
 
@@ -75,7 +81,7 @@ Vue.component('date-update-modal', {
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" v-on:click="changeActiveCustomerDate">Save changes</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="changeActiveCustomerDate">Save changes</button>
                       </div>
                     </div>
                   </div>
@@ -108,10 +114,5 @@ Vue.component('date-update-modal', {
 
 var deliveryView = new Vue({
     el: '#customers',
-    template: '<div><date-update-modal v-bind:activeCustomer="activeCustomer"/><customers v-bind:activeCustomer="activeCustomer"/></div>',
-    data: function() {
-        return {
-            'activeCustomer': {'name': "", 'date': new Date()}
-        }
-    }
+    template: '<div><date-update-modal/><customers/></div>',
 })
