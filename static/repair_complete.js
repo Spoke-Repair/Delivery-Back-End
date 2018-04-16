@@ -15,8 +15,9 @@ Vue.component('customer-item', {
                </tr>`,
     methods: {
         'changeActiveCustomer': function() {
-            this.$eventHub.$emit('activeCustomerKeyChanged', this.customer.key)
-
+            // Change the active customer remotely by sending the info about the current customer.
+            this.$eventHub.$emit('changeModalName', this.customer.name)
+            this.$eventHub.$emit('changeActiveCustomer', this.customer)
         }
     },
     mounted: function() {
@@ -77,7 +78,7 @@ Vue.component('date-update-modal', {
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
                       <div class="modal-header">
-                        <h5 class="modal-title">Change date for {{activeCustomer.name}}</h5>
+                        <h5 class="modal-title">Change date for {{displayName}}</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                           <span aria-hidden="true">&times;</span>
                         </button>
@@ -99,13 +100,21 @@ Vue.component('date-update-modal', {
             }.bind(this)
         });
 
-        this.$eventHub.$on('activeCustomerKeyChanged', function(key) {
-            this.activeCustomer.key = key;
+        // Receiving the change in activeCustomer means that "Update" was pressed for one customer.
+        // Have to change the information for that customer in anticipation of the date changing.
+        // (and to update the title of the modal)
+        this.$eventHub.$on('changeModalName', function(name) {
+            this.displayName = name;
+        }.bind(this))
+        this.$eventHub.$on('changeActiveCustomer', function(customer) {
+            this.activeCustomer = customer;
         }.bind(this))
     },
     methods: {
         'changeActiveCustomerDate': function() {
-            
+            axios.post('/change-date', {'dirtyCustomer': this.activeCustomer}).then(function(res) {
+                console.log(res);
+            });
             this.$eventHub.$emit('activeCustomerDateChanged', this.activeCustomer);
         }
     },
@@ -113,8 +122,10 @@ Vue.component('date-update-modal', {
         return {
             'activeCustomer': {
                 'name': "",
-                'date': new Date()
-            }
+                'date': new Date(),
+                'key': 0
+            },
+            'displayName': ""
         }
     }
 })

@@ -22,6 +22,7 @@ import logging
 from flask import Flask, render_template, request
 import requests
 from requests_toolbelt.adapters import appengine
+import json
 appengine.monkeypatch()
 
 from flask import jsonify
@@ -65,7 +66,9 @@ def customerData():
 
 @app.route('/change-date', methods=['POST'])
 def changeDate():
-
+    data = request.get_json()
+    print(data)
+    return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 # @app.route('/deliver')
 # def deliver():
