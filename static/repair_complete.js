@@ -5,12 +5,12 @@ Vue.component('customer-item', {
     template: `<tr>
                 <td>{{customer.name}}</td>
                 <td>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-datepicker" v-if="customer.date == undefined" v-on:click="changeActiveCustomer">Update</button>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-datepicker" v-if="customer.date == ''" v-on:click="changeActiveCustomer">Update</button>
                     <p v-else>{{formattedDate}}</p>
                 </td>
                 <td>
-                    <button type="button" class="btn btn-primary" v-if="customer.completed">Finish</button>
-                    <button type="button" class="btn btn-primary" disabled v-else>Completed</button>
+                    <button type="button" class="btn btn-primary" disabled v-if="customer.completed">Completed</button>
+                    <button type="button" class="btn btn-primary" v-else>Finish</button>
                 </td>
                </tr>`,
     methods: {
@@ -27,7 +27,10 @@ Vue.component('customer-item', {
     },
     computed: {
         'formattedDate': function() {
-            return this.customer.date.toLocaleDateString('en-US')
+            if (this.customer.date != "")
+                return this.customer.date.toLocaleDateString('en-US')
+            else
+                return this.customer.date;
         }
     }
 })
@@ -55,12 +58,14 @@ Vue.component('customers', {
     },
     mounted: function() {
         axios.get('/customer-data').then(function(res) {
-            this.customers = res.data.map(function(row) {
-                return {
-                    'name': row[0],
-                    'completed': row[9],
-                    'date': row[10]
+            this.customers = res.data.map(function(curCustomer) {
+                var curCustObj = {
+                    'name': curCustomer.name,
+                    'completed': curCustomer.completed === 'True',
+                    'date': curCustomer.eta_date,
+                    'key': curCustomer.row_number
                 }
+                return curCustObj;
             })
         }.bind(this))
     }
@@ -114,5 +119,5 @@ Vue.component('date-update-modal', {
 
 var deliveryView = new Vue({
     el: '#customers',
-    template: '<div><date-update-modal/><customers/></div>',
+    template: '<div><date-update-modal/><customers/></div>'
 })

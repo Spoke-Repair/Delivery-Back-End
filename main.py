@@ -35,8 +35,7 @@ app = Flask(__name__)
 # https://github.com/nithinmurali/pygsheets
 import pygsheets
 gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
-sh = gc.open_by_key('1M442BGZL1WA2o1Te_pBFQKZc1p06WEAxEUUvIM3dRz8')
-
+sh = gc.open_by_key('1H1M2lmPzEzVISCp5PsK98UZCuuoTSeL1rthw8wHeZME')
 
 # [START form]
 @app.route('/form')
@@ -73,15 +72,20 @@ def server_error(e):
 @app.route('/customer-data')
 def customerData():
     # Open spreadsheet and then workseet
-    wks = sh.worksheet_by_title('Apps Script Data')
-    cell_list = wks.range('A2:I40', returnas="matrix")
+    wks = sh.worksheet_by_title('Spoke Delivery (Waterloo)')
+    cell_list = wks.range('A2:J40', returnas="matrix")
 
     entries = []
-    for row in cell_list:
+    for idx, row in enumerate(cell_list):
         name = row[0]
         if not name:
             break
-        entries.append([x for x in row])
+
+        curCustomer = {'name': row[0] + ' ' + row[1], \
+                        'completed': row[8], \
+                        'eta_date': row[9], \
+                        'row_number': idx}
+        entries.append(curCustomer)
 
     print(entries)
     return jsonify(entries)
