@@ -15,12 +15,12 @@ Vue.component('customer-item', {
                </tr>`,
     methods: {
         'changeActiveCustomer': function() {
-            this.$eventHub.$emit('activeCustomerNameChanged', this.customer.name)
+            this.$eventHub.$emit('activeCustomerKeyChanged', this.customer.key)
         }
     },
     mounted: function() {
         this.$eventHub.$on('activeCustomerDateChanged', function(activeCustomer) {
-            if (this.customer.name == activeCustomer.name)
+            if (this.customer.key == activeCustomer.key)
                 this.customer.date = activeCustomer.date;
             // TODO: logic to update the sheet with the correct date.
         }.bind(this));
@@ -98,8 +98,8 @@ Vue.component('date-update-modal', {
             }.bind(this)
         });
 
-        this.$eventHub.$on('activeCustomerNameChanged', function(name) {
-            this.activeCustomer.name = name;
+        this.$eventHub.$on('activeCustomerKeyChanged', function(key) {
+            this.activeCustomer.key = key;
         }.bind(this))
     },
     methods: {
