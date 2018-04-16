@@ -16,6 +16,7 @@ Vue.component('customer-item', {
     methods: {
         'changeActiveCustomer': function() {
             this.$eventHub.$emit('activeCustomerKeyChanged', this.customer.key)
+
         }
     },
     mounted: function() {
@@ -104,6 +105,7 @@ Vue.component('date-update-modal', {
     },
     methods: {
         'changeActiveCustomerDate': function() {
+            
             this.$eventHub.$emit('activeCustomerDateChanged', this.activeCustomer);
         }
     },

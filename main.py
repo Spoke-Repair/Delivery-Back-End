@@ -36,31 +36,8 @@ app = Flask(__name__)
 import pygsheets
 gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
 sh = gc.open_by_key('1H1M2lmPzEzVISCp5PsK98UZCuuoTSeL1rthw8wHeZME')
-
-# [START form]
-@app.route('/form')
-def form():
-    return render_template('form.html')
-# [END form]
-
-# [START submitted]
-@app.route('/submitted', methods=['POST'])
-def submitted_form():
-    name = request.form['name']
-    email = request.form['email']
-    site = request.form['site_url']
-    comments = request.form['comments']
-
-    # [END submitted]
-    # [START render_template]
-    return render_template(
-        'submitted_form.html',
-        name=name,
-        email=email,
-        site=site,
-        comments=comments)
-    # [END render_template]
-
+wks = sh.worksheet_by_title('Spoke Delivery (Waterloo)')
+cell_list = wks.range('A2:J40', returnas="matrix")
 
 @app.errorhandler(500)
 def server_error(e):
@@ -71,10 +48,6 @@ def server_error(e):
 
 @app.route('/customer-data')
 def customerData():
-    # Open spreadsheet and then workseet
-    wks = sh.worksheet_by_title('Spoke Delivery (Waterloo)')
-    cell_list = wks.range('A2:J40', returnas="matrix")
-
     entries = []
     for idx, row in enumerate(cell_list):
         name = row[0]
@@ -89,6 +62,10 @@ def customerData():
 
     print(entries)
     return jsonify(entries)
+
+@app.route('/change-date', methods=['POST'])
+def changeDate():
+
 
 # @app.route('/deliver')
 # def deliver():
