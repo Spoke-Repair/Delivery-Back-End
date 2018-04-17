@@ -2,30 +2,18 @@ Vue.prototype.$eventHub = new Vue();
 
 Vue.component('customer-item', {
     props: ['customer'],
-    template: `<tr>
-                <td>{{customer.name}}</td>
-                <td>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-popup" v-if="!customer.date" v-on:click="setDate">Set date</button>
-                    <span v-else><p>{{formattedDate}}</p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-popup" v-on:click="setDate">Change date</button></span>
-                </td>
-                <td>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-popup" v-if="!customer.price" v-on:click="setPrice">Set price</button>
-                    <span v-else><p>{{price}}</p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-popup" v-on:click="setPrice">Change price</button></span>
-                </td>
-                <td>
-                    <button type="button" class="btn btn-primary" disabled v-if="customer.completed">Completed</button>
-                    <button type="button" class="btn btn-primary" v-else v-on:click="sendCompletion">Finish</button>
-                </td>
-               </tr>`,
+    template: `
+    <div class="card">
+        <div class="card-body" v-bind:class="{'bg-light': customer.completed}">
+            <h5 style="display:inline-block;" class="card-title">{{customer.name}}</h5>
+            <span class="font-weight-light float-right" v-if="customer.date">Est. {{formattedDate}}</span>
+            <div class="col-xs-2">{{customer.price}}</div>
+            <span v-if="customer.price">$\{{customer.price}}</span><span v-else class="font-italic">Price not set</span>
+            <span v-if="customer.completed" class="font-italic float-right">(Completed)</span>
+            <a v-else href="#" class="card-link float-right" data-target="#modal-popup" data-toggle="modal">Edit</a>
+        </div>
+    </div>`,
     methods: {
-        'setPrice': function() {
-            this.changeActiveCustomer();
-            this.$eventHub.$emit('changeModalType', 'price');
-        },
-        'setDate': function() {
-            this.changeActiveCustomer();
-            this.$eventHub.$emit('changeModalType', 'date');
-        },
         'changeActiveCustomer': function() {
             // Change the active customer remotely by sending the info about the current customer.
             this.$eventHub.$emit('changeModalName', this.customer.name)
@@ -55,20 +43,9 @@ Vue.component('customer-item', {
 
 Vue.component('customers', {
     template: `<div id="customers">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th scope="col">Name</th>
-                            <th scope="col">Est. completion date</th>
-                            <th scope="col">Price</th>
-                            <th scope="col">Complete repair</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <customer-item v-for="customer in customers" v-bind:customer="customer">
-                        </customer-item>
-                    </tbody>
-                </table></div>`,
+                    <customer-item v-for="customer in customers" v-bind:customer="customer">
+                    </customer-item>
+                </div>`,
     data: function() {
         return {
             'customers': []
@@ -105,7 +82,7 @@ Vue.component('modal-price', {
                 </div>`
 })
 
-Vue.component('date-update-modal', {
+Vue.component('edit-customer-modal', {
     template: `<div class="modal fade" id="modal-popup" tabindex="-1" role="dialog" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -166,5 +143,5 @@ Vue.component('date-update-modal', {
 
 var deliveryView = new Vue({
     el: '#customers',
-    template: '<div><date-update-modal/><customers/></div>'
+    template: '<div><edit-customer-modal/><customers/></div>'
 })
