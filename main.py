@@ -45,7 +45,7 @@ sh = gc.open_by_key('1H1M2lmPzEzVISCp5PsK98UZCuuoTSeL1rthw8wHeZME')
 wksheets = {'WLC': sh.worksheet_by_title('Spoke Delivery (Waterloo)')}
 
 # initialize data
-cells = {'WLC': wksheets['WLC'].range('A2:J100', returnas="range")}
+cells = {'WLC': wksheets['WLC'].range('A2:L100', returnas="range")}
 
 # possible values for "shop" values in /complete
 shops = ['']
@@ -73,6 +73,7 @@ def customerData():
         curCustomer = {'name': row[0].value + ' ' + row[1].value, \
                         'completed': row[9].value, \
                         'eta_date': row[8].value, \
+                        'price': row[10].value, \
                         'row_number': idx + 2}
         entries.append(curCustomer)
     return jsonify(entries)
