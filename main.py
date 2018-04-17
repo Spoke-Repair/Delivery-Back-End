@@ -38,7 +38,9 @@ import pygsheets
 gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
 sh = gc.open_by_key('1H1M2lmPzEzVISCp5PsK98UZCuuoTSeL1rthw8wHeZME')
 wks = sh.worksheet_by_title('Spoke Delivery (Waterloo)')
-cells = wks.range('A2:J40', returnas="matrix")
+
+# initialize data
+cells = wks.range('A2:J40', returnas="range")
 
 @app.errorhandler(500)
 def server_error(e):
@@ -51,17 +53,13 @@ def server_error(e):
 def customerData():
     entries = []
     for idx, row in enumerate(cells):
-        name = row[0]
-        if not name:
+        if not row[0].value:
             break
-
-        curCustomer = {'name': row[0] + ' ' + row[1], \
-                        'completed': row[9], \
-                        'eta_date': row[8], \
+        curCustomer = {'name': row[0].value + ' ' + row[1].value, \
+                        'completed': row[9].value, \
+                        'eta_date': row[8].value, \
                         'row_number': idx + 2}
         entries.append(curCustomer)
-
-    print(entries)
     return jsonify(entries)
 
 @app.route('/change-date', methods=['POST'])
@@ -96,4 +94,6 @@ def sendCompletion():
 
 @app.route('/complete')
 def complete():
+    # reload the data when the page is refreshed
+    cells.fetch()
     return render_template('repair_complete.html')
