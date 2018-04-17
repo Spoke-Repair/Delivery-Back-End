@@ -19,7 +19,7 @@
 import logging
 
 # [START imports]
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, send_from_directory
 import requests
 import os
 from requests_toolbelt.adapters import appengine
@@ -30,7 +30,7 @@ from flask import jsonify
 # [END imports]
 
 # [START create_app]
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or \
     'e5ac358c-f0bf-11e5-9e39-d3b532c10a28'
 # [END create_app]
@@ -78,7 +78,7 @@ def changeDate():
     shopWks = wksheets[session['shop']]
     data = request.get_json()
 
-    # update the date for the correct cell
+    # update the date for the correct cell. Column name is I for date
     shopWks.update_cell('I' + str(data['key']), str(data['date']))
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
@@ -87,12 +87,18 @@ def sendCompletion():
     shopWks = wksheets[session['shop']]
     data = request.get_json()
 
+    # update the completed status for the correct cell. Column name is J for completion
     shopWks.update_cell('J' + str(data['key']), str(data['completed']))
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 @app.route('/complete')
 def complete():
-    # reload the data when the page is refreshed
     session['shop'] = request.args.get('shop')
+
+    # reload the data when the page is refreshed
     cells[session['shop']].fetch()
     return render_template('repair_complete.html')
+
+@app.route('/wakemydyno.txt')
+def wakemydyno():
+    return send_from_directory(app.static_folder, request.path[1:])
