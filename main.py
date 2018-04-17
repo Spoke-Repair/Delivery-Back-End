@@ -35,6 +35,10 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or \
     'e5ac358c-f0bf-11e5-9e39-d3b532c10a28'
 # [END create_app]
 
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
+
 # for documentation on setting up pygsheets:
 # https://github.com/nithinmurali/pygsheets
 import pygsheets
