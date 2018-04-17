@@ -66,7 +66,6 @@ Vue.component('customers', {
         }.bind(this));
 
        this.$eventHub.$on('modalModifyActiveCustomer', function(activeCustomer) {
-            console.log(activeCustomer)
             this.$set(this.customers, activeCustomer.key - 2, activeCustomer);
         }.bind(this));
     }
@@ -86,12 +85,15 @@ Vue.component('edit-date', {
         $('#datepicker').datepicker({
             inline: true,
             onSelect: function(dateText, inst) {
-                this.activeCustomer.date = new Date(dateText);
+                this.modifyActiveCustomer({'date': new Date(dateText)})
                 this.toggleEditing()
             }.bind(this)
         });
     },
     methods: {
+        'modifyActiveCustomer': function(customer) {
+            this.$emit('modifyActiveCustomer', customer);
+        },
         'toggleEditing': function() {
             this.editing = !this.editing;
         }
@@ -112,28 +114,29 @@ Vue.component('edit-date', {
 })
 
 Vue.component('edit-price', {
-    props: ['price'],
-    template: `<div><div v-if="editing" class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">$</span>
-                </div>
-                <input v-on:input="updatePrice($event.target.value)" v-bind:value="price" type="text" class="form-control">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="button" v-on:click="cancelPriceChanges">Cancel</button>
-                </div>
-              </div>
+    props: ['activeCustomer'],
+    template: `<div>
+                    <div :class="{hide: editing}" class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">$</span>
+                        </div>
+                        <input v-on:input="updatePrice($event.target.value)" v-bind:value="activeCustomer.price" type="text" class="form-control">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" v-on:click="toggleEditing">Save</button>
+                        </div>
+                    </div>
 
-              <p v-else>
-                <span>Price: <span v-if="price">$\{{price}}</span><span v-else class="font-italic">(Not set)</span></span>
-                <a v-on:click="toggleEditing"><img class="float-right" src="imgs/edit.png"/></a>
-              </p></div>`,
+                    <p :class="{hide: !editing}">
+                        <span>Price: <span v-if="activeCustomer.price">$\{{activeCustomer.price}}</span><span v-else class="font-italic">(Not set)</span></span>
+                        <a v-on:click="toggleEditing"><img class="float-right" src="imgs/edit.png"/></a>
+                    </p>
+              </div>`,
     methods: {
         'updatePrice': function(price) {
-            this.$emit('updatePrice', price);
+            this.modifyActiveCustomer({'price': price})
         },
-        'cancelPriceChanges': function() {
-            this.price = this.prevPrice;
-            this.toggleEditing();
+        'modifyActiveCustomer': function(customer) {
+            this.$emit('modifyActiveCustomer', customer);
         },
         'toggleEditing': function() {
             this.editing = !this.editing;
@@ -142,7 +145,7 @@ Vue.component('edit-price', {
     data: function() {
         return {
             'editing': this.price == undefined,
-            'prevPrice': this.price
+            'prevPrice': this.activeCustomer.price
         }
     }
 })
@@ -158,11 +161,11 @@ Vue.component('edit-customer-modal', {
                           <span aria-hidden="true">&times;</span>
                         </button>
                       </div>
-                      <edit-date v-bind:activeCustomer="activeCustomer"/>
-                      <edit-price v-model:price="activeCustomer.price" v-on:updatePrice="updatePrice"/>
+                      <edit-date :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer"/>
+                      <edit-price :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer"/>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="modalModifyActiveCustomer">Save changes</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="modifyActiveCustomer">Save changes</button>
                       </div>
                     </div>
                   </div>
@@ -179,26 +182,28 @@ Vue.component('edit-customer-modal', {
         // }.bind(this))
     },
     methods: {
-        'updatePrice': function(price) {
-            this.activeCustomer.price = price;
-        },
-        'modalModifyActiveCustomer': function() {
-            axios.post('/change-date', this.activeCustomer)
-            this.$emit('modalModifyActiveCustomer', this.activeCustomer);
+        'modifyActiveCustomer': function(customer) {
+            this.$emit('modifyActiveCustomer', customer);
         }
     }
 })
 
 var deliveryView = new Vue({
     el: '#customers',
-    template: `<div><edit-customer-modal :activeCustomer="activeCustomer" @modalModifyActiveCustomer="modalModifyActiveCustomer"/>
+    template: `<div><edit-customer-modal :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer"/>
                 <customers :activeCustomer="activeCustomer" @setActiveCustomer="setActiveCustomer"/></div>`,
     methods: {
         setActiveCustomer: function(candidateCustomer) {
             this.activeCustomer = candidateCustomer;
         },
-        modalModifyActiveCustomer: function(changedCustomer) {
-            this.activeCustomer = changedCustomer;
+        modifyActiveCustomer: function(changedCustomer) {
+            for (var dirtyProp in changedCustomer) {
+                if (changedCustomer.hasOwnProperty(dirtyProp)) {
+                    this.activeCustomer[dirtyProp] = changedCustomer[dirtyProp];
+                }
+            }
+            // axios.post('/change-date', this.activeCustomer)
+            // this.$emit('modifyActiveCustomer', this.activeCustomer);
         }
     },
     data: function() {
