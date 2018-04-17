@@ -175,7 +175,6 @@ Vue.component('edit-customer-modal', {
             this.$emit('modifyActiveCustomer', customer);
         },
         'submitCustomerChanges': function() {
-            console.log('submitting changes')
             this.$emit('submitCustomerChanges');
         }
     }
@@ -197,7 +196,6 @@ var deliveryView = new Vue({
             }
         },
         submitCustomerChanges: function() {
-            console.log(this.activeCustomer)
             axios.post('/change-customer', this.activeCustomer);
         }
     },

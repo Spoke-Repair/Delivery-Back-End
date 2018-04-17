@@ -82,14 +82,11 @@ def customerData():
 def changeDate():
     shopWks = wksheets[session['shop']]
     data = request.get_json()
-    print(data)
 
     # update the date for the correct cell. Column name is I for date
     for field, colLetter in {'date': 'I', 'price': 'K'}.items():
-        print(field, data.keys())
         if field in data.keys():
             cellAddr = colLetter + str(data['key'])
-            print(cellAddr)
             shopWks.update_cell(cellAddr, str(data[field]))
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
