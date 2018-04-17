@@ -5,7 +5,7 @@ Vue.component('customer-item', {
     template: `<tr>
                 <td>{{customer.name}}</td>
                 <td>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-datepicker" v-if="customer.date == ''" v-on:click="changeActiveCustomer">Update</button>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-datepicker" v-if="!customer.date" v-on:click="changeActiveCustomer">Update</button>
                     <p v-else>{{formattedDate}}</p>
                 </td>
                 <td>
@@ -28,7 +28,6 @@ Vue.component('customer-item', {
         this.$eventHub.$on('activeCustomerDateChanged', function(activeCustomer) {
             if (this.customer.key == activeCustomer.key)
                 this.customer.date = activeCustomer.date;
-            // TODO: logic to update the sheet with the correct date.
         }.bind(this));
     },
     computed: {
@@ -48,7 +47,7 @@ Vue.component('customers', {
                     <thead>
                         <tr>
                             <th scope="col">Name</th>
-                            <th scope="col">Est. competion date</th>
+                            <th scope="col">Est. completion date</th>
                             <th scope="col">Complete repair</th>
                         </tr>
                     </thead>
@@ -124,7 +123,7 @@ Vue.component('date-update-modal', {
         return {
             'activeCustomer': {
                 'name': "",
-                'date': new Date(),
+                'date': undefined,
                 'key': 0
             },
             'displayName': ""
