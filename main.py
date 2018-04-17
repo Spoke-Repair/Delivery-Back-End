@@ -38,7 +38,7 @@ import pygsheets
 gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
 sh = gc.open_by_key('1H1M2lmPzEzVISCp5PsK98UZCuuoTSeL1rthw8wHeZME')
 wks = sh.worksheet_by_title('Spoke Delivery (Waterloo)')
-cell_list = wks.range('A2:J40', returnas="matrix")
+cells = wks.range('A2:J40', returnas="matrix")
 
 @app.errorhandler(500)
 def server_error(e):
@@ -50,7 +50,7 @@ def server_error(e):
 @app.route('/customer-data')
 def customerData():
     entries = []
-    for idx, row in enumerate(cell_list):
+    for idx, row in enumerate(cells):
         name = row[0]
         if not name:
             break
@@ -58,7 +58,7 @@ def customerData():
         curCustomer = {'name': row[0] + ' ' + row[1], \
                         'completed': row[8], \
                         'eta_date': row[9], \
-                        'row_number': idx}
+                        'row_number': idx + 2}
         entries.append(curCustomer)
 
     print(entries)
@@ -67,19 +67,23 @@ def customerData():
 @app.route('/change-date', methods=['POST'])
 def changeDate():
     data = request.get_json()
-    print(data)
+
+    # update the date for the correct cell
+    wks.update_cell('I' + str(data['key']), str(data['date']))
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 @app.route('/send-completion', methods=['POST'])
 def sendCompletion():
     data = request.get_json()
+
+    wks.update_cell('J' + str(data['key']), str(data['completed']))
     print(data)
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 # @app.route('/deliver')
 # def deliver():
 #     return render_template('deliver.html')
-    # print(cell_list)
+    # print(cells)
 
     # Update a cell with value (just to let him know values is updated ;) )
     # wks.update_cell('A1', "Hey yank this numpy array")

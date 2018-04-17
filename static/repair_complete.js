@@ -21,7 +21,7 @@ Vue.component('customer-item', {
         },
         'sendCompletion': function() {
             this.customer.completed = true;
-            axios.post('/send-completion', {'completedCustomer': this.customer})
+            axios.post('/send-completion', this.customer)
         }
     },
     mounted: function() {
@@ -115,7 +115,7 @@ Vue.component('date-update-modal', {
     },
     methods: {
         'changeActiveCustomerDate': function() {
-            axios.post('/change-date', {'dirtyCustomer': this.activeCustomer})
+            axios.post('/change-date', this.activeCustomer)
             this.$eventHub.$emit('activeCustomerDateChanged', this.activeCustomer);
         }
     },
