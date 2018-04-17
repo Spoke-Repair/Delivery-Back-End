@@ -78,13 +78,19 @@ def customerData():
         entries.append(curCustomer)
     return jsonify(entries)
 
-@app.route('/change-date', methods=['POST'])
+@app.route('/change-customer', methods=['POST'])
 def changeDate():
     shopWks = wksheets[session['shop']]
     data = request.get_json()
+    print(data)
 
     # update the date for the correct cell. Column name is I for date
-    shopWks.update_cell('I' + str(data['key']), str(data['date']))
+    for field, colLetter in {'date': 'I', 'price': 'K'}.items():
+        print(field, data.keys())
+        if field in data.keys():
+            cellAddr = colLetter + str(data['key'])
+            print(cellAddr)
+            shopWks.update_cell(cellAddr, str(data[field]))
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 @app.route('/send-completion', methods=['POST'])

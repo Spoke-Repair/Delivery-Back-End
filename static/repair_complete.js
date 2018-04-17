@@ -165,32 +165,25 @@ Vue.component('edit-customer-modal', {
                       <edit-price :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer"/>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="modifyActiveCustomer">Save changes</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="submitCustomerChanges">Submit changes</button>
                       </div>
                     </div>
                   </div>
                 </div>`,
-    mounted: function () {
-
-        // Receiving the change in activeCustomer means that "Update" was pressed for one customer.
-        // Have to change the information for that customer in anticipation of the date changing.
-        // (and to update the title of the modal)
-
-        // this.$eventHub.$on('setActiveCustomer', function(customer) {
-        //     // have to deep copy both of these, because changes aren't made if the modal is x-ed out of.
-        //     this.activeCustomer = customer;
-        // }.bind(this))
-    },
     methods: {
         'modifyActiveCustomer': function(customer) {
             this.$emit('modifyActiveCustomer', customer);
+        },
+        'submitCustomerChanges': function() {
+            console.log('submitting changes')
+            this.$emit('submitCustomerChanges');
         }
     }
 })
 
 var deliveryView = new Vue({
     el: '#customers',
-    template: `<div><edit-customer-modal :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer"/>
+    template: `<div><edit-customer-modal :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer" @submitCustomerChanges="submitCustomerChanges"/>
                 <customers :activeCustomer="activeCustomer" @setActiveCustomer="setActiveCustomer"/></div>`,
     methods: {
         setActiveCustomer: function(candidateCustomer) {
@@ -202,8 +195,10 @@ var deliveryView = new Vue({
                     this.activeCustomer[dirtyProp] = changedCustomer[dirtyProp];
                 }
             }
-            // axios.post('/change-date', this.activeCustomer)
-            // this.$emit('modifyActiveCustomer', this.activeCustomer);
+        },
+        submitCustomerChanges: function() {
+            console.log(this.activeCustomer)
+            axios.post('/change-customer', this.activeCustomer);
         }
     },
     data: function() {
