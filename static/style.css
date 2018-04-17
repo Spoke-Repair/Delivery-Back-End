@@ -6,10 +6,10 @@
 	margin:30px 30px;
 }
 
-.modal-popup {
-	position:fixed;
-	margin: 0 auto;
-	height:70%;
-	width:70%;
-	background-color:white;
+.modal-content > .input-group {
+	margin-bottom:15px;
+}
+
+.hide {
+	display:none;
 }

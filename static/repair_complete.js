@@ -10,13 +10,12 @@ Vue.component('customer-item', {
             <div class="col-xs-2">{{customer.price}}</div>
             <span v-if="customer.price">$\{{customer.price}}</span><span v-else class="font-italic">Price not set</span>
             <span v-if="customer.completed" class="font-italic float-right">(Completed)</span>
-            <a v-else href="#" class="card-link float-right" data-target="#modal-popup" data-toggle="modal">Edit</a>
+            <a v-else href="#" class="card-link float-right" v-on:click="changeActiveCustomer" data-target="#modal-popup" data-toggle="modal">Edit</a>
         </div>
     </div>`,
     methods: {
         'changeActiveCustomer': function() {
             // Change the active customer remotely by sending the info about the current customer.
-            this.$eventHub.$emit('changeModalName', this.customer.name)
             this.$eventHub.$emit('changeActiveCustomer', this.customer)
         },
         'sendCompletion': function() {
@@ -57,9 +56,9 @@ Vue.component('customers', {
                 var curCustObj = {
                     'name': curCustomer.name,
                     'completed': curCustomer.completed === 'TRUE',
-                    'date': curCustomer.eta_date == "" ? "" : new Date(curCustomer.eta_date),
+                    'date': curCustomer.eta_date == "" ? undefined : new Date(curCustomer.eta_date),
                     'key': curCustomer.row_number,
-                    'price': curCustomer.price
+                    'price': curCustomer.price == "" ? undefined : Number(curCustomer.price)
                 }
                 return curCustObj;
             })
@@ -67,33 +66,87 @@ Vue.component('customers', {
     }
 })
 
-Vue.component('modal-date', {
-    template: `<div class="modal-body">
-                    <div id="datepicker"></div>
-                </div>`
+Vue.component('edit-date', {
+    props: ['activeCustomer'],
+    template: `<div><div id="datepicker">
+                </div>
+                <p v-if="!editing">
+                    <span>Est. completion: {{formattedDate}}</span>
+                    <a v-on:click="toggleEditing"><img class="float-right" src="imgs/edit.png"/></a>
+                </p></div>`,
+    mounted: function() {
+        $('#datepicker').datepicker({
+            inline: true,
+            onSelect: function(dateText, inst) {
+                this.date = new Date(dateText);
+                this.toggleEditing()
+            }.bind(this)
+        });
+    },
+    methods: {
+        'toggleEditing': function() {
+            console.log(this.editing)
+            this.editing = !this.editing;
+            $('#datepicker').toggleClass('hide');
+        }
+    },
+    data: function() {
+        return {
+            'editing': this.date == undefined,
+            'date': this.activeCustomer.date
+        }
+    },
+    computed: {
+        'formattedDate': function() {
+            if (this.date)
+                return this.date.toLocaleDateString('en-US')
+            else
+                return undefined;
+        }
+    }
 })
 
-Vue.component('modal-price', {
-    template: `<div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">$</span>
-                    </div>
-                    <input type="text" class="form-control">
-                </div>`
+Vue.component('edit-price', {
+    props: ['activeCustomer'],
+    template: `<div><div v-if="editing" class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">$</span>
+                </div>
+                <input type="text" class="form-control">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" v-on:click="toggleEditing">Cancel</button>
+                </div>
+              </div>
+
+              <p v-else>
+                <span>Price: <span v-if="price">$\{{price}}</span><span v-else class="font-italic">(Not set)</span></span>
+                <a v-on:click="toggleEditing"><img class="float-right" src="imgs/edit.png"/></a>
+              </p></div>`,
+    methods: {
+        'toggleEditing': function() {
+            this.editing = !this.editing;
+        }
+    },
+    data: function() {
+        return {
+            'editing': this.price == undefined,
+            'price': this.activeCustomer.price
+        }
+    }
 })
 
 Vue.component('edit-customer-modal', {
     template: `<div class="modal fade" id="modal-popup" tabindex="-1" role="dialog" aria-hidden="true">
                   <div class="modal-dialog" role="document">
-                    <div class="modal-content">
+                    <div class="modal-content" style="padding:15px;">
                       <div class="modal-header">
-                        <h5 class="modal-title">Change {{modalType}} for {{displayName}}</h5>
+                        <h5 class="modal-title">Edit info for {{activeCustomer.name}}</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                           <span aria-hidden="true">&times;</span>
                         </button>
                       </div>
-                      <modal-date v-if="modalType == 'date'"/>
-                      <modal-price v-if="modalType == 'price'"/>
+                      <edit-date v-bind:activeCustomer="activeCustomer"/>
+                      <edit-price v-bind:activeCustomer="activeCustomer"/>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="changeActiveCustomerDate">Save changes</button>
@@ -102,11 +155,6 @@ Vue.component('edit-customer-modal', {
                   </div>
                 </div>`,
     mounted: function () {
-        $('#datepicker').datepicker({
-            onSelect: function(dateText, inst) {
-                this.activeCustomer.date = new Date(dateText);
-            }.bind(this)
-        });
 
         // Receiving the change in activeCustomer means that "Update" was pressed for one customer.
         // Have to change the information for that customer in anticipation of the date changing.
