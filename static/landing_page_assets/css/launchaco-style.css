@@ -1,0 +1,208 @@
+.text-right {
+  text-align:right;
+}
+
+#cta-3 h4 {
+  margin: 60px 0px 30px 0px;
+}
+
+#shop-c2a {
+  position:relative;
+  margin:0 auto;
+}
+
+#shop-request {
+  width:400px;
+  margin:0 auto;
+  position:relative;
+  display:block;
+}
+
+#shop-request > input {
+  display:block;
+  background-color: #88c4e0;
+  width:400px;
+  outline:none;
+  border:2px;
+  border-radius:4px;
+  font-size:12pt;
+  padding:10px;
+}
+
+#shop-request > input::placeholder {
+  color:#d7f9ff;
+}
+
+#shop-request > button {
+  display:block;
+  margin:30px auto;
+}
+
+#faq-1 .container-lrg {
+  padding: 50px 0px;
+}
+
+#faq-1 img {
+  width: 40%;
+  margin: 40px 0px 40px 100px;
+}
+
+#pricing-3 {
+  background-image: url('../img/shop-invite.jpg');
+  background-size: cover;
+}
+
+#main-landing-bg {
+  background-image: url('../img/wheel-landing-img.jpg');
+  background-size: cover;
+}
+
+#shop-landing-bg {
+  height:40%;
+  background-position: 0% 40%;
+  background-image: url('../img/shop-hero.jpeg');
+  background-size:cover;
+}
+
+.image-overlay:before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(#86868654, #131e27);
+  -moz-transition: background .3s linear;
+  -webkit-transition: background .3s linear;
+  -o-transition: background .3s linear;
+  transition: background .3s linear;
+}
+
+.secondary-color {
+  color:white;
+}
+
+.lightblue-gradient {
+  background: linear-gradient(#277ac3,#76c1ce);
+}
+
+
+.social-icon {
+  height:40px;
+}
+
+.contact-nav > a {
+  margin-left:30px;
+  vertical-align: top;
+}
+.launchaco-promo {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  cursor: pointer;
+  width: 0;
+  height: 0;
+  z-index: 999999;
+}
+
+.launchaco-promo__active {
+  width: initial;
+  height: initial;
+}
+
+.launchaco-promo-speechbubble {
+  font-family: -apple-system, BlinkMacSystemFont, Roboto, "Open Sans", "Helvetica Neue", sans-serif;
+  position: absolute;
+  left: 50px;
+  top: -11px;
+  padding: 9px;
+  color: white;
+  border-radius: 3px;
+  background: linear-gradient(#227ef7, #1290fc);
+  font-size: 14px;
+  font-weight: 600;
+  width: 93px;
+  box-sizing: border-box;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease-in-out;
+}
+
+.launchaco-promo__active:hover .launchaco-promo-speechbubble {
+  opacity: 1;
+}
+
+.launchaco-promo svg {
+  transition: all .3s ease-in-out;
+  opacity: 0;
+}
+
+.launchaco-promo__active svg {
+  opacity: 1;
+}
+
+.launchaco-promo-speechbubble:before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  left: -4px;
+  bottom: 10px;
+  border-radius: 3px;
+  background: #1290fc;
+  z-index: 2;
+  position: absolute
+}
+
+.launchaco-promo__active .launchaco-promo-speechbubble__animate {
+  animation: popinpopup 3s linear forwards 0.1s;
+}
+
+@keyframes popinpopup {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 3px, 0)
+  }
+  7%,
+  93% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0)
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -4px, 0)
+  }
+}
+
+.launchaco-promo-animate:hover {
+  opacity: 1 !important;
+}
+
+
+#faq-1 {
+}
+
+
+#faq-1 {
+  padding-bottom:50px;
+}
+
+
+ {
+  #faq-1 p:;;
+}
+
+
+ {
+}
+
+
+#faq-1 {
+}
+
+
+#f #pricing-3 {
+  background-image:url('../img/shop-invite.jpg');
+  background-size:cover;
+}

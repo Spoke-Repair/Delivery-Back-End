@@ -57,6 +57,10 @@ def server_error(e):
     return 'An internal error occurred.', 500
 # [END app]
 
+@app.route('/')
+def index():
+    return send_from_directory(app.static_folder, 'landing_page_assets/index.html')
+
 @app.route('/customer-data')
 def customerData():
     shopCells = cells[session['shop']]
