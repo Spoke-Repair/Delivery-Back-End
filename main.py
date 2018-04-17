@@ -96,7 +96,7 @@ def sendCompletion():
     data = request.get_json()
 
     # update the completed status for the correct cell. Column name is J for completion
-    shopWks.update_cell('J' + str(data['key']), str(data['completed']))
+    shopWks.update_cell('J' + str(data['key']), True)
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 @app.route('/complete')

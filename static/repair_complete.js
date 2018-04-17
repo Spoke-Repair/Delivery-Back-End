@@ -166,6 +166,7 @@ Vue.component('edit-customer-modal', {
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="submitCustomerChanges">Submit changes</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" :disabled="activeCustomer.completed" v-on:click="completeOrder">Complete</button>
                       </div>
                     </div>
                   </div>
@@ -176,13 +177,16 @@ Vue.component('edit-customer-modal', {
         },
         'submitCustomerChanges': function() {
             this.$emit('submitCustomerChanges');
+        },
+        'completeOrder': function() {
+            this.$emit('completeOrder');
         }
     }
 })
 
 var deliveryView = new Vue({
     el: '#customers',
-    template: `<div><edit-customer-modal :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer" @submitCustomerChanges="submitCustomerChanges"/>
+    template: `<div><edit-customer-modal :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer" @submitCustomerChanges="submitCustomerChanges" @completeOrder="completeOrder"/>
                 <customers :activeCustomer="activeCustomer" @setActiveCustomer="setActiveCustomer"/></div>`,
     methods: {
         setActiveCustomer: function(candidateCustomer) {
@@ -197,6 +201,10 @@ var deliveryView = new Vue({
         },
         submitCustomerChanges: function() {
             axios.post('/change-customer', this.activeCustomer);
+        },
+        completeOrder: function() {
+            this.activeCustomer.completed = true;
+            axios.post('/send-completion', this.activeCustomer);
         }
     },
     data: function() {
@@ -205,7 +213,8 @@ var deliveryView = new Vue({
                 'name': "",
                 'date': undefined,
                 'price': undefined,
-                'key': 0
+                'key': 0,
+                'completed': false
             }
         }
     }
