@@ -68,12 +68,14 @@ Vue.component('customers', {
 
 Vue.component('edit-date', {
     props: ['activeCustomer'],
-    template: `<div><div id="datepicker">
+    template: `<div>
+                <div v-bind:class="{hide: editing}" id="datepicker">
                 </div>
-                <p v-if="!editing">
+                <p v-bind:class="{hide: !editing}">
                     <span>Est. completion: {{formattedDate}}</span>
                     <a v-on:click="toggleEditing"><img class="float-right" src="imgs/edit.png"/></a>
-                </p></div>`,
+                </p>
+                </div>`,
     mounted: function() {
         $('#datepicker').datepicker({
             inline: true,
@@ -87,12 +89,11 @@ Vue.component('edit-date', {
         'toggleEditing': function() {
             console.log(this.editing)
             this.editing = !this.editing;
-            $('#datepicker').toggleClass('hide');
         }
     },
     data: function() {
         return {
-            'editing': this.date == undefined,
+            'editing': this.activeCustomer.date == undefined,
             'date': this.activeCustomer.date
         }
     },
@@ -159,14 +160,9 @@ Vue.component('edit-customer-modal', {
         // Receiving the change in activeCustomer means that "Update" was pressed for one customer.
         // Have to change the information for that customer in anticipation of the date changing.
         // (and to update the title of the modal)
-        this.$eventHub.$on('changeModalName', function(name) {
-            this.displayName = name;
-        }.bind(this))
         this.$eventHub.$on('changeActiveCustomer', function(customer) {
             this.activeCustomer = customer;
-        }.bind(this))
-        this.$eventHub.$on('changeModalType', function(type) {
-            this.modalType = type;
+            console.log(this.activeCustomer)
         }.bind(this))
     },
     methods: {
