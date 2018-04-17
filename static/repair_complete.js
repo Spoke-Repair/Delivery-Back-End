@@ -66,10 +66,11 @@ Vue.component('customers', {
             this.customers = res.data.map(function(curCustomer) {
                 var curCustObj = {
                     'name': curCustomer.name,
-                    'completed': curCustomer.completed === 'True',
-                    'date': curCustomer.eta_date,
+                    'completed': curCustomer.completed === 'TRUE',
+                    'date': curCustomer.eta_date == "" ? "" : new Date(curCustomer.eta_date),
                     'key': curCustomer.row_number
                 }
+                console.log(curCustObj)
                 return curCustObj;
             })
         }.bind(this))

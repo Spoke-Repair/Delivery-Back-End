@@ -56,8 +56,8 @@ def customerData():
             break
 
         curCustomer = {'name': row[0] + ' ' + row[1], \
-                        'completed': row[8], \
-                        'eta_date': row[9], \
+                        'completed': row[9], \
+                        'eta_date': row[8], \
                         'row_number': idx + 2}
         entries.append(curCustomer)
 
