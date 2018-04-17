@@ -70,7 +70,6 @@ Vue.component('customers', {
                     'date': curCustomer.eta_date == "" ? "" : new Date(curCustomer.eta_date),
                     'key': curCustomer.row_number
                 }
-                console.log(curCustObj)
                 return curCustObj;
             })
         }.bind(this))

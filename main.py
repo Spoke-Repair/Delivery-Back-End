@@ -19,8 +19,9 @@
 import logging
 
 # [START imports]
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 import requests
+import os
 from requests_toolbelt.adapters import appengine
 import json
 appengine.monkeypatch()
@@ -30,6 +31,8 @@ from flask import jsonify
 
 # [START create_app]
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or \
+    'e5ac358c-f0bf-11e5-9e39-d3b532c10a28'
 # [END create_app]
 
 # for documentation on setting up pygsheets:
@@ -37,10 +40,15 @@ app = Flask(__name__)
 import pygsheets
 gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
 sh = gc.open_by_key('1H1M2lmPzEzVISCp5PsK98UZCuuoTSeL1rthw8wHeZME')
-wks = sh.worksheet_by_title('Spoke Delivery (Waterloo)')
+
+# TODO: store these in a database rather than keeping track of all shops via hardcoded list of them.
+wksheets = {'WLC': sh.worksheet_by_title('Spoke Delivery (Waterloo)')}
 
 # initialize data
-cells = wks.range('A2:J40', returnas="range")
+cells = {'WLC': wksheets['WLC'].range('A2:J100', returnas="range")}
+
+# possible values for "shop" values in /complete
+shops = ['']
 
 @app.errorhandler(500)
 def server_error(e):
@@ -51,8 +59,11 @@ def server_error(e):
 
 @app.route('/customer-data')
 def customerData():
+    shopCells = cells[session['shop']]
+    # cell.fetch() was already called to update the DataRange in /complete.
+    # but now they have to be formatted to send to the frontend.
     entries = []
-    for idx, row in enumerate(cells):
+    for idx, row in enumerate(shopCells):
         if not row[0].value:
             break
         curCustomer = {'name': row[0].value + ' ' + row[1].value, \
@@ -64,36 +75,24 @@ def customerData():
 
 @app.route('/change-date', methods=['POST'])
 def changeDate():
+    shopWks = wksheets[session['shop']]
     data = request.get_json()
 
     # update the date for the correct cell
-    wks.update_cell('I' + str(data['key']), str(data['date']))
+    shopWks.update_cell('I' + str(data['key']), str(data['date']))
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 @app.route('/send-completion', methods=['POST'])
 def sendCompletion():
+    shopWks = wksheets[session['shop']]
     data = request.get_json()
 
-    wks.update_cell('J' + str(data['key']), str(data['completed']))
-    print(data)
+    shopWks.update_cell('J' + str(data['key']), str(data['completed']))
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
-
-# @app.route('/deliver')
-# def deliver():
-#     return render_template('deliver.html')
-    # print(cells)
-
-    # Update a cell with value (just to let him know values is updated ;) )
-    # wks.update_cell('A1', "Hey yank this numpy array")
-
-    # update the sheet with array
-    # wks.update_cells('A2', my_nparray.to_list())
-
-    # share the sheet with your friend
-    # sh.share("myFriend@gmail.com")
 
 @app.route('/complete')
 def complete():
     # reload the data when the page is refreshed
-    cells.fetch()
+    session['shop'] = request.args.get('shop')
+    cells[session['shop']].fetch()
     return render_template('repair_complete.html')
