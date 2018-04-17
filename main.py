@@ -70,6 +70,12 @@ def changeDate():
     print(data)
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
+@app.route('/send-completion', methods=['POST'])
+def sendCompletion():
+    data = request.get_json()
+    print(data)
+    return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
+
 # @app.route('/deliver')
 # def deliver():
 #     return render_template('deliver.html')

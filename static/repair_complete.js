@@ -10,7 +10,7 @@ Vue.component('customer-item', {
                 </td>
                 <td>
                     <button type="button" class="btn btn-primary" disabled v-if="customer.completed">Completed</button>
-                    <button type="button" class="btn btn-primary" v-else>Finish</button>
+                    <button type="button" class="btn btn-primary" v-else v-on:click="sendCompletion">Finish</button>
                 </td>
                </tr>`,
     methods: {
@@ -18,6 +18,10 @@ Vue.component('customer-item', {
             // Change the active customer remotely by sending the info about the current customer.
             this.$eventHub.$emit('changeModalName', this.customer.name)
             this.$eventHub.$emit('changeActiveCustomer', this.customer)
+        },
+        'sendCompletion': function() {
+            this.customer.completed = true;
+            axios.post('/send-completion', {'completedCustomer': this.customer})
         }
     },
     mounted: function() {
@@ -112,9 +116,7 @@ Vue.component('date-update-modal', {
     },
     methods: {
         'changeActiveCustomerDate': function() {
-            axios.post('/change-date', {'dirtyCustomer': this.activeCustomer}).then(function(res) {
-                console.log(res);
-            });
+            axios.post('/change-date', {'dirtyCustomer': this.activeCustomer})
             this.$eventHub.$emit('activeCustomerDateChanged', this.activeCustomer);
         }
     },
