@@ -1,15 +1,11 @@
 ## To start
 
-Authenticate on google:
-```
-$ python gsheets_auth.py
-```
+Install Python dependencies from Pipfile, using pipenv:
 
-Run the flask server:
-
-```
-python main.py
-```
+1. First, install pipenv: `pip install pipenv`
+2. Then, install the dependencies: `pipenv install --dev`
+3. Authenticate on google: `python gsheets_auth.py`
+4. Run the flask server: `python main.py`
 
 ## Notes on setup:
 
