@@ -43,6 +43,7 @@ sh = gc.open_by_key('1H1M2lmPzEzVISCp5PsK98UZCuuoTSeL1rthw8wHeZME')
 
 # TODO: store these in a database rather than keeping track of all shops via hardcoded list of them.
 wksheets = {'WLC': sh.worksheet_by_title('Spoke Delivery (Waterloo)')}
+shopNames = {'WLC': 'Waterloo Cycles'}
 
 # initialize data
 cells = {'WLC': wksheets['WLC'].range('A2:L100', returnas="range")}
@@ -105,7 +106,7 @@ def complete():
 
     # reload the data when the page is refreshed
     cells[session['shop']].fetch()
-    return render_template('repair_complete.html')
+    return render_template('repair_complete.html', shopName=shopNames[session['shop']])
 
 @app.route('/wakemydyno.txt')
 def wakemydyno():

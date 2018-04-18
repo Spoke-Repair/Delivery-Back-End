@@ -186,8 +186,10 @@ Vue.component('edit-customer-modal', {
 
 var deliveryView = new Vue({
     el: '#customers',
-    template: `<div><edit-customer-modal :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer" @submitCustomerChanges="submitCustomerChanges" @completeOrder="completeOrder"/>
-                <customers :activeCustomer="activeCustomer" @setActiveCustomer="setActiveCustomer"/></div>`,
+    template: `<div class="container">
+                    <edit-customer-modal :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer" @submitCustomerChanges="submitCustomerChanges" @completeOrder="completeOrder"/>
+                    <customers :activeCustomer="activeCustomer" @setActiveCustomer="setActiveCustomer"/>
+                </div>`,
     methods: {
         setActiveCustomer: function(candidateCustomer) {
             this.activeCustomer = candidateCustomer;
