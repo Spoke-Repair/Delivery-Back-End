@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, session, send_from_directory
 import requests
 import os
 import json
+from twilio.rest import Client
 
 from flask import jsonify
 # [END imports]
@@ -15,6 +16,13 @@ from flask import jsonify
 app = Flask(__name__, static_folder='static', static_url_path='')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or \
     'e5ac358c-f0bf-11e5-9e39-d3b532c10a28'
+
+# stored in private credentials file that isn't uploaded to repo.
+# For information on how heroku stores it, see
+# https://softwareengineering.stackexchange.com/questions/163506/how-does-one-handle-sensitive-data-when-using-github-and-heroku
+twilio_sid, twilio_auth_token = os.environ.get('TWILIO_SID'), os.environ.get('TWILIO_AUTH_TOKEN')
+twilioClient = Client(twilio_sid, twilio_auth_token)
+
 # [END create_app]
 
 # for documentation on setting up pygsheets:
@@ -80,6 +88,12 @@ def sendCompletion():
 
     # update the completed status for the correct cell. Column name is J for completion
     shopWks.update_cell('J' + str(data['key']), True)
+
+    smsBody = shopNames[session['shop']] + ' completed a repair for ' + data['name']
+    twilioClient.api.account.messages.create(
+        to="+12104833330",
+        from_="+18316618982",
+        body=smsBody)
 
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
