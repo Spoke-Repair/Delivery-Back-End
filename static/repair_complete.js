@@ -164,7 +164,6 @@ Vue.component('edit-customer-modal', {
                       <edit-date :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer"/>
                       <edit-price :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer"/>
                       <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="submitCustomerChanges">Submit changes</button>
                         <button type="button" class="btn btn-primary" data-dismiss="modal" :disabled="activeCustomer.completed" v-on:click="completeOrder">Complete</button>
                       </div>
