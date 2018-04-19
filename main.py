@@ -58,9 +58,14 @@ def customerData():
     # cell.fetch() was already called to update the DataRange in /complete.
     # but now they have to be formatted to send to the frontend.
     entries = []
-    for idx, row in enumerate(shopCells):
+
+    # grab the last row number from the range string. i.e. A1:J100 --> 100
+    # subtract header rows.
+    length = int(shopCells.range.split(':')[1][1:]) - 2
+    for idx in range(length):
+        row = shopCells[idx]
         if not row[0].value:
-            break
+            continue
         curCustomer = {'name': row[0].value + ' ' + row[1].value, \
                         'completed': row[9].value, \
                         'eta_date': row[8].value, \
