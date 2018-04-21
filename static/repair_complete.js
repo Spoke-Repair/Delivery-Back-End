@@ -6,9 +6,9 @@ Vue.component('customer-item', {
     <div class="card">
         <div class="card-body" v-bind:class="{'bg-light': customer.completed}">
             <h5 style="display:inline-block;" class="card-title">{{customer.name}}</h5>
-            <p v-if="customer.repairSummary">{{customer.repairSummary}}</p>
             <span class="font-weight-light float-right" v-if="customer.date">Est. {{formattedDate}}</span>
             <p>
+                <p v-if="customer.repairSummary">{{customer.repairSummary}}</p>
                 <span v-if="customer.price">$\{{customer.price}}</span><span v-else class="font-italic">Price not set</span>
                 <span v-if="customer.completed" class="font-italic float-right">(Completed)</span>
                 <a v-else href="#" class="card-link float-right" v-on:click="setActiveCustomer" data-target="#modal-popup" data-toggle="modal">Edit</a>
