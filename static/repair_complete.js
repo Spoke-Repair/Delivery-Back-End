@@ -6,6 +6,7 @@ Vue.component('customer-item', {
     <div class="card">
         <div class="card-body" v-bind:class="{'bg-light': customer.completed}">
             <h5 style="display:inline-block;" class="card-title">{{customer.name}}</h5>
+            <p v-if="customer.repairSummary">{{customer.repairSummary}}</p>
             <span class="font-weight-light float-right" v-if="customer.date">Est. {{formattedDate}}</span>
             <p>
                 <span v-if="customer.price">$\{{customer.price}}</span><span v-else class="font-italic">Price not set</span>
@@ -59,7 +60,8 @@ Vue.component('customers', {
                     'completed': curCustomer.completed === 'TRUE',
                     'date': curCustomer.eta_date == "" ? undefined : new Date(curCustomer.eta_date),
                     'key': curCustomer.row_number,
-                    'price': curCustomer.price == "" ? undefined : Number(curCustomer.price)
+                    'price': curCustomer.price == "" ? undefined : Number(curCustomer.price),
+                    'repairSummary': curCustomer.repair_summary == "" ? undefined: curCustomer.repair_summary
                 }
                 return curCustObj;
             })
@@ -144,8 +146,41 @@ Vue.component('edit-price', {
     },
     data: function() {
         return {
-            'editing': this.price == undefined,
+            'editing': this.activeCustomer.price == undefined,
             'prevPrice': this.activeCustomer.price
+        }
+    }
+})
+
+Vue.component('edit-summary', {
+    props: ['activeCustomer'],
+    template: `<div>
+                    <div :class="{hide: editing}" class="input-group">
+                        <textarea v-on:input="updateSummary($event.target.value)" class="form-control"></textarea>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" v-on:click="toggleEditing">Save</button>
+                        </div>
+                    </div>
+                    <p :class="{hide: !editing}">
+                        <span v-if="activeCustomer.repairSummary">{{activeCustomer.repairSummary}}</span>
+                        <span v-else class="font-italic">(No repair summary)</span>
+                        <a v-on:click="toggleEditing"><img class="float-right" src="imgs/edit.png"/></a>
+                    </p>
+               </div>`,
+    methods: {
+        toggleEditing: function() {
+            this.editing = !this.editing;
+        },
+        updateSummary: function(summary) {
+            this.modifyActiveCustomer({'repairSummary': summary})
+        },
+        modifyActiveCustomer: function(customer) {
+            this.$emit('modifyActiveCustomer', customer);
+        }
+    },
+    data: function() {
+        return {
+            'editing': this.activeCustomer.repairSummary == undefined
         }
     }
 })
@@ -163,6 +198,7 @@ Vue.component('edit-customer-modal', {
                       </div>
                       <edit-date :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer"/>
                       <edit-price :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer"/>
+                      <edit-summary :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer"/>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-primary" data-dismiss="modal" v-on:click="submitCustomerChanges">Submit changes</button>
                         <button type="button" class="btn btn-primary" data-dismiss="modal" :disabled="activeCustomer.completed" v-on:click="completeOrder">Complete</button>
@@ -215,7 +251,8 @@ var deliveryView = new Vue({
                 'date': undefined,
                 'price': undefined,
                 'key': 0,
-                'completed': false
+                'completed': false,
+                'repairSummary': undefined
             }
         }
     }

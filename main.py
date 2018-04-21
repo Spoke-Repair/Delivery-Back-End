@@ -70,6 +70,7 @@ def customerData():
                         'completed': row[9].value, \
                         'eta_date': row[8].value, \
                         'price': row[10].value, \
+                        'repair_summary': row[11].value, \
                         'row_number': idx + 2}
         entries.append(curCustomer)
     return jsonify(entries)
@@ -80,7 +81,7 @@ def changeDate():
     data = request.get_json()
 
     # update the date for the correct cell. Column name is I for date
-    for field, colLetter in {'date': 'I', 'price': 'K'}.items():
+    for field, colLetter in {'date': 'I', 'price': 'K', 'repairSummary': 'L'}.items():
         if field in data.keys():
             cellAddr = colLetter + str(data['key'])
             shopWks.update_cell(cellAddr, str(data[field]))
