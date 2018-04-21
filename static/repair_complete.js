@@ -8,7 +8,9 @@ Vue.component('customer-item', {
             <h5 style="display:inline-block;" class="card-title">{{customer.name}}</h5>
             <span class="font-weight-light float-right" v-if="customer.date">Est. {{formattedDate}}</span>
             <p>
-                <p v-if="customer.repairSummary">{{customer.repairSummary}}</p>
+                <p v-if="customer.repairSummary">
+                    <span v-for="line in delineatedSummary">{{line}}<br></span>
+                </p>
                 <span v-if="customer.price">$\{{customer.price}}</span><span v-else class="font-italic">Price not set</span>
                 <span v-if="customer.completed" class="font-italic float-right">(Completed)</span>
                 <a v-else href="#" class="card-link float-right" v-on:click="setActiveCustomer" data-target="#modal-popup" data-toggle="modal">Edit</a>
@@ -31,6 +33,9 @@ Vue.component('customer-item', {
                 return this.customer.date.toLocaleDateString('en-US')
             else
                 return this.customer.date;
+        },
+        'delineatedSummary': function() {
+            return this.customer.repairSummary.split('\n');
         }
     }
 })
