@@ -71,10 +71,6 @@ Vue.component('customers', {
                 return curCustObj;
             })
         }.bind(this));
-
-       this.$eventHub.$on('modalModifyActiveCustomer', function(activeCustomer) {
-            this.$set(this.customers, activeCustomer.key - 2, activeCustomer);
-        }.bind(this));
     }
 })
 
@@ -96,6 +92,10 @@ Vue.component('edit-date', {
                 this.toggleEditing()
             }.bind(this)
         });
+
+        this.$eventHub.$on('editingOff', function() {
+            this.editing = true;
+        }.bind(this));
     },
     methods: {
         'modifyActiveCustomer': function(customer) {
@@ -127,25 +127,34 @@ Vue.component('edit-price', {
                         <div class="input-group-prepend">
                             <span class="input-group-text">$</span>
                         </div>
-                        <input v-on:input="updatePrice($event.target.value)" v-bind:value="activeCustomer.price" type="text" class="form-control">
+                        <input id="edit-price-input" type="text" class="form-control">
                         <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" v-on:click="toggleEditing">Save</button>
+                            <button class="btn btn-outline-secondary" type="button" v-on:click="updatePrice">Save</button>
                         </div>
                     </div>
 
                     <p :class="{hide: !editing}">
                         <span>Price: <span v-if="activeCustomer.price">$\{{activeCustomer.price}}</span><span v-else class="font-italic">(Not set)</span></span>
-                        <a v-on:click="toggleEditing"><img class="float-right" src="imgs/edit.png"/></a>
+                        <a v-on:click="enterEditMode"><img class="float-right" src="imgs/edit.png"/></a>
                     </p>
               </div>`,
+    mounted: function() {
+        this.$eventHub.$on('editingOff', function() {
+            this.editing = true;
+        }.bind(this));
+    },
     methods: {
-        'updatePrice': function(price) {
-            this.modifyActiveCustomer({'price': price})
+        'updatePrice': function() {
+            var inputDOMElem = document.getElementById('edit-price-input');
+            this.modifyActiveCustomer({'price': inputDOMElem.value});
+            inputDOMElem.value = '';
+            this.editing = !this.editing;
         },
         'modifyActiveCustomer': function(customer) {
             this.$emit('modifyActiveCustomer', customer);
         },
-        'toggleEditing': function() {
+        'enterEditMode': function() {
+            document.getElementById('edit-price-input').value = this.activeCustomer.price;
             this.editing = !this.editing;
         }
     },
@@ -161,7 +170,7 @@ Vue.component('edit-summary', {
     props: ['activeCustomer'],
     template: `<div>
                     <div :class="{hide: editing}" class="input-group">
-                        <textarea v-on:input="updateSummary($event.target.value)" class="form-control"></textarea>
+                        <textarea v-on:input="updateSummary($event.target.value)" class="form-control">{{activeCustomer.repairSummary}}</textarea>
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" type="button" v-on:click="toggleEditing">Save</button>
                         </div>
@@ -172,6 +181,11 @@ Vue.component('edit-summary', {
                         <a v-on:click="toggleEditing"><img class="float-right" src="imgs/edit.png"/></a>
                     </p>
                </div>`,
+    mounted: function() {
+        this.$eventHub.$on('editingOff', function() {
+            this.editing = true;
+        }.bind(this));
+    },
     methods: {
         toggleEditing: function() {
             this.editing = !this.editing;
@@ -227,26 +241,54 @@ Vue.component('edit-customer-modal', {
 var deliveryView = new Vue({
     el: '#customers',
     template: `<div class="container">
-                    <edit-customer-modal :activeCustomer="activeCustomer" @modifyActiveCustomer="modifyActiveCustomer" @submitCustomerChanges="submitCustomerChanges" @completeOrder="completeOrder"/>
+                    <edit-customer-modal :activeCustomer="stagedCustomer" @modifyActiveCustomer="modifyActiveCustomer" @submitCustomerChanges="submitCustomerChanges" @completeOrder="completeOrder"/>
                     <customers :activeCustomer="activeCustomer" @setActiveCustomer="setActiveCustomer"/>
                 </div>`,
     methods: {
         setActiveCustomer: function(candidateCustomer) {
+            // initialize active customer, but this won't be touched until submit is clicked
             this.activeCustomer = candidateCustomer;
+            this.$eventHub.$emit('editingOff');
+            this.stagedCustomer = this.initStagedCustomer();
+            console.log(this.stagedCustomer)
+            // initialize a stageCustomer to keep track of fields without updating original data (activeCustomer)
+            // use this for the display of changes within the modal.
+            for (var prop in candidateCustomer) {
+                if (candidateCustomer.hasOwnProperty(prop)) {
+                    this.stagedCustomer[prop] = candidateCustomer[prop]
+                }
+            }
         },
-        modifyActiveCustomer: function(changedCustomer) {
-            for (var dirtyProp in changedCustomer) {
-                if (changedCustomer.hasOwnProperty(dirtyProp)) {
-                    this.activeCustomer[dirtyProp] = changedCustomer[dirtyProp];
+        modifyActiveCustomer: function(dirtyProps) {
+            for (var dirtyProp in dirtyProps) {
+                if (dirtyProps.hasOwnProperty(dirtyProp)) {
+                    this.stagedCustomer[dirtyProp] = dirtyProps[dirtyProp];
                 }
             }
         },
         submitCustomerChanges: function() {
+            // TODO: check for any changes to the original by comparing stagedCustomer and activeCustomer
+            for (var dirtyProp in this.stagedCustomer) {
+                if (this.stagedCustomer.hasOwnProperty(dirtyProp)) {
+                    this.activeCustomer[dirtyProp] = this.stagedCustomer[dirtyProp];
+                }
+            }
             axios.post('/change-customer', this.activeCustomer);
         },
         completeOrder: function() {
+            // TODO: properly update based on staged
             this.activeCustomer.completed = true;
             axios.post('/send-completion', this.activeCustomer);
+        },
+        initStagedCustomer: function() {
+            return {
+                'name': "",
+                'date': undefined,
+                'price': undefined,
+                'key': 0,
+                'completed': false,
+                'repairSummary': undefined
+            }
         }
     },
     data: function() {
@@ -258,7 +300,8 @@ var deliveryView = new Vue({
                 'key': 0,
                 'completed': false,
                 'repairSummary': undefined
-            }
+            },
+            'stagedCustomer': this.initStagedCustomer()
         }
     }
 })
