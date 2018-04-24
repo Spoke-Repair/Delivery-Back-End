@@ -170,15 +170,15 @@ Vue.component('edit-summary', {
     props: ['activeCustomer'],
     template: `<div>
                     <div :class="{hide: editing}" class="input-group">
-                        <textarea v-on:input="updateSummary($event.target.value)" class="form-control">{{activeCustomer.repairSummary}}</textarea>
+                        <textarea id="edit-summary-input" class="form-control">{{activeCustomer.repairSummary}}</textarea>
                         <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" v-on:click="toggleEditing">Save</button>
+                            <button class="btn btn-outline-secondary" type="button" v-on:click="updateSummary">Save</button>
                         </div>
                     </div>
                     <p :class="{hide: !editing}">
                         <span v-if="activeCustomer.repairSummary">{{activeCustomer.repairSummary}}</span>
                         <span v-else class="font-italic">(No repair summary)</span>
-                        <a v-on:click="toggleEditing"><img class="float-right" src="imgs/edit.png"/></a>
+                        <a v-on:click="enterEditMode"><img class="float-right" src="imgs/edit.png"/></a>
                     </p>
                </div>`,
     mounted: function() {
@@ -187,11 +187,15 @@ Vue.component('edit-summary', {
         }.bind(this));
     },
     methods: {
-        toggleEditing: function() {
+        enterEditMode: function() {
+            document.getElementById('edit-summary-input').value = this.activeCustomer.repairSummary || '';
             this.editing = !this.editing;
         },
-        updateSummary: function(summary) {
-            this.modifyActiveCustomer({'repairSummary': summary})
+        updateSummary: function() {
+            var inputDOMElem = document.getElementById('edit-summary-input');
+            this.modifyActiveCustomer({'repairSummary': inputDOMElem.value});
+            inputDOMElem.value = '';
+            this.editing = !this.editing;
         },
         modifyActiveCustomer: function(customer) {
             this.$emit('modifyActiveCustomer', customer);
