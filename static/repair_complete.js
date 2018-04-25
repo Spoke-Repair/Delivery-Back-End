@@ -154,7 +154,7 @@ Vue.component('edit-price', {
             this.$emit('modifyActiveCustomer', customer);
         },
         'enterEditMode': function() {
-            document.getElementById('edit-price-input').value = this.activeCustomer.price;
+            document.getElementById('edit-price-input').value = this.activeCustomer.price || '';
             this.editing = !this.editing;
         }
     },
