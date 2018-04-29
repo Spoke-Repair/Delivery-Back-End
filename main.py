@@ -8,14 +8,17 @@ import requests
 import os
 import json
 from twilio.rest import Client
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
+from authenticate import load_firebase_credentials_into_json
 
 from flask import jsonify
 # [END imports]
 
 # [START create_app]
 app = Flask(__name__, static_folder='static', static_url_path='')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or \
-    'e5ac358c-f0bf-11e5-9e39-d3b532c10a28'
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY')
 
 # stored in private credentials file that isn't uploaded to repo.
 # For information on how heroku stores it, see
@@ -23,13 +26,21 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or \
 twilio_sid, twilio_auth_token = os.environ.get('TWILIO_SID'), os.environ.get('TWILIO_AUTH_TOKEN')
 twilioClient = Client(twilio_sid, twilio_auth_token)
 
+load_firebase_credentials_into_json()
+cred = credentials.Certificate('firebase-service-acc-creds.json')
+firebase_admin.initialize_app(cred, {'databaseURL': 'https://spoke-ops-tool.firebaseio.com/'})
+
+fb_globals_ref = db.reference('globals').get()
+twilio_to_number, twilio_from_number = fb_globals_ref['twilio_to_number'], fb_globals_ref['twilio_from_number']
+sh_key = fb_globals_ref['typeform_response_sheet_id']
+
 # [END create_app]
 
 # for documentation on setting up pygsheets:
 # https://github.com/nithinmurali/pygsheets
 import pygsheets
 gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
-sh = gc.open_by_key('1H1M2lmPzEzVISCp5PsK98UZCuuoTSeL1rthw8wHeZME')
+sh = gc.open_by_key(sh_key)
 
 # TODO: store these in a database rather than keeping track of all shops via hardcoded list of them.
 wksheets = {'WLC': sh.worksheet_by_title('Spoke Delivery (Waterloo)')}
@@ -97,8 +108,8 @@ def sendCompletion():
 
     smsBody = shopNames[session['shop']] + ' completed a repair for ' + data['name']
     twilioClient.api.account.messages.create(
-        to="+12104833330",
-        from_="+18316618982",
+        to=twilio_to_number,
+        from_=twilio_from_number,
         body=smsBody)
 
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
@@ -110,6 +121,13 @@ def complete():
     # reload the data when the page is refreshed
     cells[session['shop']].fetch()
     return render_template('repair_complete.html', shopName=shopNames[session['shop']])
+
+@app.route('/push-user-data')
+def pushUserData():
+    ref = db.reference('dummykey')
+    print(ref.get())
+    return 'ok'
+
 
 @app.route('/wakemydyno.txt')
 def wakemydyno():
