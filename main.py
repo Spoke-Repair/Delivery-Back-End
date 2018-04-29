@@ -12,6 +12,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 from authenticate import load_firebase_credentials_into_json
+from datetime import datetime
 
 from flask import jsonify
 # [END imports]
@@ -124,19 +125,23 @@ def complete():
 
 @app.route('/get-orders')
 def pushUserData():
-    work_orders = db.reference('workOrders').order_by_child('shop_key').equal_to(session['shop'])
-    return jsonify(work_orders)
+    work_orders = db.reference('workOrders').order_by_child('shop_key').equal_to(session['shop']).get()
+    work_orders_list = []
+    for _, val in work_orders.items():
+        work_orders_list.append(val)
+    return jsonify(work_orders_list)
 
-@app.route('/new-work-order')
+@app.route('/new-work-order', methods=["POST"])
 def newWorkOrder():
     orderData = request.get_json()
     order = db.reference('workOrders').push()
     order.set({
         'shop_key': session['shop'],
-        'customer_name': orderData.customer_name,
-        'customer_phone': orderData.customer_phone',
-        'repair_summary': orderData.repair_summary,
-        'completed': False
+        'customer_name': orderData['customer_name'],
+        'customer_phone': orderData['customer_phone'],
+        'repair_summary': orderData['repair_summary'],
+        'completed': False,
+        'creation_date': str(datetime.now())
         })
     return 'ok'
 
