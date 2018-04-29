@@ -122,12 +122,23 @@ def complete():
     cells[session['shop']].fetch()
     return render_template('repair_complete.html', shopName=shopNames[session['shop']])
 
-@app.route('/push-user-data')
+@app.route('/get-orders')
 def pushUserData():
-    ref = db.reference('dummykey')
-    print(ref.get())
-    return 'ok'
+    work_orders = db.reference('workOrders').order_by_child('shop_key').equal_to(session['shop'])
+    return jsonify(work_orders)
 
+@app.route('/new-work-order')
+def newWorkOrder():
+    orderData = request.get_json()
+    order = db.reference('workOrders').push()
+    order.set({
+        'shop_key': session['shop'],
+        'customer_name': orderData.customer_name,
+        'customer_phone': orderData.customer_phone',
+        'repair_summary': orderData.repair_summary,
+        'completed': False
+        })
+    return 'ok'
 
 @app.route('/wakemydyno.txt')
 def wakemydyno():
