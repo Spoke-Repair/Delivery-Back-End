@@ -124,10 +124,11 @@ def complete():
     return render_template('repair_complete.html', shopName=shopNames[session['shop']])
 
 @app.route('/get-orders')
-def pushUserData():
+def getOrders():
     work_orders = db.reference('workOrders').order_by_child('shop_key').equal_to(session['shop']).get()
     work_orders_list = []
-    for _, val in work_orders.items():
+    for key, val in work_orders.items():
+        val['key'] = key
         work_orders_list.append(val)
     return jsonify(work_orders_list)
 
@@ -141,6 +142,8 @@ def newWorkOrder():
         'customer_phone': orderData['customer_phone'],
         'repair_summary': orderData['repair_summary'],
         'completed': False,
+        'eta_date': False,
+        'price': False,
         'creation_date': str(datetime.now())
         })
     return 'ok'

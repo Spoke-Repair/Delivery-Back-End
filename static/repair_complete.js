@@ -58,15 +58,15 @@ Vue.component('customers', {
         }
     },
     mounted: function() {
-        axios.get('/customer-data').then(function(res) {
+        axios.get('/get-orders').then(function(res) {
             this.customers = res.data.map(function(curCustomer) {
                 var curCustObj = {
-                    'name': curCustomer.name,
-                    'completed': curCustomer.completed === 'TRUE',
-                    'date': curCustomer.eta_date == "" ? undefined : new Date(curCustomer.eta_date),
-                    'key': curCustomer.row_number,
-                    'price': curCustomer.price == "" ? undefined : Number(curCustomer.price),
-                    'repairSummary': curCustomer.repair_summary == "" ? undefined: curCustomer.repair_summary
+                    'name': curCustomer.customer_name,
+                    'completed': curCustomer.completed == true,
+                    'date': curCustomer.eta_date == false ? undefined : new Date(curCustomer.eta_date),
+                    'key': curCustomer.key,
+                    'price': curCustomer.price == false ? undefined : Number(curCustomer.price),
+                    'repairSummary': curCustomer.repair_summary == false ? undefined : curCustomer.repair_summary
                 }
                 return curCustObj;
             })
