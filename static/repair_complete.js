@@ -66,8 +66,10 @@ Vue.component('customers', {
                     'date': curCustomer.eta_date == false ? undefined : new Date(curCustomer.eta_date),
                     'key': curCustomer.key,
                     'price': curCustomer.price == false ? undefined : Number(curCustomer.price),
-                    'repairSummary': curCustomer.repair_summary == false ? undefined : curCustomer.repair_summary
+                    'repairSummary': curCustomer.repair_summary == false ? undefined : curCustomer.repair_summary,
+                    'delivery_requested': curCustomer.delivery_requested == false ? undefined : curCustomer.delivery_requested
                 }
+                console.log(curCustObj)
                 return curCustObj;
             })
         }.bind(this));

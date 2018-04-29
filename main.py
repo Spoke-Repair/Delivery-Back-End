@@ -13,6 +13,7 @@ from firebase_admin import credentials
 from firebase_admin import db
 from authenticate import load_firebase_credentials_into_json
 from datetime import datetime
+import dateutil.parser
 
 from flask import jsonify
 # [END imports]
@@ -64,29 +65,6 @@ def server_error(e):
 def index():
     return send_from_directory(app.static_folder, 'landing_page_assets/index.html')
 
-@app.route('/customer-data')
-def customerData():
-    shopCells = cells[session['shop']]
-    # cell.fetch() was already called to update the DataRange in /complete.
-    # but now they have to be formatted to send to the frontend.
-    entries = []
-
-    # grab the last row number from the range string. i.e. A1:J100 --> 100
-    # subtract header rows.
-    length = int(shopCells.range.split(':')[1][1:]) - 2
-    for idx in range(length):
-        row = shopCells[idx]
-        if not row[0].value:
-            continue
-        curCustomer = {'name': row[0].value + ' ' + row[1].value, \
-                        'completed': row[9].value, \
-                        'eta_date': row[8].value, \
-                        'price': row[10].value, \
-                        'repair_summary': row[11].value, \
-                        'row_number': idx + 2}
-        entries.append(curCustomer)
-    return jsonify(entries)
-
 @app.route('/change-customer', methods=['POST'])
 def changeDate():
     shopWks = wksheets[session['shop']]
@@ -125,11 +103,41 @@ def complete():
 
 @app.route('/get-orders')
 def getOrders():
+    # fetch orders from firebase
     work_orders = db.reference('workOrders').order_by_child('shop_key').equal_to(session['shop']).get()
     work_orders_list = []
     for key, val in work_orders.items():
         val['key'] = key
         work_orders_list.append(val)
+
+    # fetch records from google sheets, to mark orders that require delivery.
+    
+    # begin by grabbing the phone numbers
+    shopCells = cells[session['shop']]
+    # cell.fetch() was already called to update the DataRange in /complete.
+    # but now they have to be formatted to send to the frontend.
+
+    # grab the last row number from the range string. i.e. A1:J100 --> 100
+    # subtract header rows.
+    phones = {}
+    length = int(shopCells.range.split(':')[1][1:]) - 2
+    for idx in range(length):
+        row = shopCells[idx]
+        if not row[0].value:
+            continue
+        curPhoneNum, submitDate = row[3].value, row[6].value
+        phones[curPhoneNum] = submitDate
+
+    for order in work_orders_list:
+        curPhone = order['customer_phone']
+        if curPhone in phones:
+            # heuristic: only consider delivery requests as valid for a particular customer if the customer submitted
+            # the request within 10 days of the shop's order creation.
+            if abs((dateutil.parser.parse(order['creation_date']) - dateutil.parser.parse(phones[curPhone])).days) <= 10:
+                order['delivery_requested'] = True
+            else:
+                order['delivery_requested'] = False
+
     return jsonify(work_orders_list)
 
 @app.route('/new-work-order', methods=["POST"])
