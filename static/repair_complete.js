@@ -13,7 +13,7 @@ Vue.component('customer-item', {
                 </p>
                 <span v-if="customer.price">$\{{customer.price}}</span><span v-else class="font-italic">Price not set</span>
                 <span v-if="customer.completed" class="font-italic float-right">(Completed)</span>
-                <a v-else href="#" class="card-link float-right" v-on:click="setActiveCustomer" data-target="#modal-popup" data-toggle="modal">Edit</a>
+                <a v-else href="#" class="card-link float-right" v-on:click="setActiveCustomer" data-target="#modal-order-edit" data-toggle="modal">Edit</a>
             </p>
         </div>
     </div>`,
@@ -50,6 +50,22 @@ Vue.component('customers', {
     methods: {
         setActiveCustomer: function(customer) {
             this.$emit('setActiveCustomer', customer);
+        },
+        getOrders: function() {
+            axios.get('/get-orders').then(function(res) {
+                this.customers = res.data.map(function(curCustomer) {
+                    var curCustObj = {
+                        'name': curCustomer.customer_name,
+                        'completed': curCustomer.completed == true,
+                        'date': curCustomer.eta_date == false ? undefined : new Date(curCustomer.eta_date),
+                        'key': curCustomer.key,
+                        'price': curCustomer.price == false ? undefined : Number(curCustomer.price),
+                        'repairSummary': curCustomer.repair_summary == false ? undefined : curCustomer.repair_summary,
+                        'delivery_requested': curCustomer.delivery_requested == false ? undefined : curCustomer.delivery_requested
+                    }
+                    return curCustObj;
+                })
+            }.bind(this));
         }
     },
     data: function() {
@@ -58,21 +74,10 @@ Vue.component('customers', {
         }
     },
     mounted: function() {
-        axios.get('/get-orders').then(function(res) {
-            this.customers = res.data.map(function(curCustomer) {
-                var curCustObj = {
-                    'name': curCustomer.customer_name,
-                    'completed': curCustomer.completed == true,
-                    'date': curCustomer.eta_date == false ? undefined : new Date(curCustomer.eta_date),
-                    'key': curCustomer.key,
-                    'price': curCustomer.price == false ? undefined : Number(curCustomer.price),
-                    'repairSummary': curCustomer.repair_summary == false ? undefined : curCustomer.repair_summary,
-                    'delivery_requested': curCustomer.delivery_requested == false ? undefined : curCustomer.delivery_requested
-                }
-                console.log(curCustObj)
-                return curCustObj;
-            })
-        }.bind(this));
+        this.getOrders();
+        this.$eventHub.$on('orderSubmitted', function(){
+            this.getOrders();
+        }.bind(this))
     }
 })
 
@@ -212,7 +217,7 @@ Vue.component('edit-summary', {
 
 Vue.component('edit-customer-modal', {
     props: ['activeCustomer'],
-    template: `<div class="modal fade" id="modal-popup" tabindex="-1" role="dialog" aria-hidden="true">
+    template: `<div class="modal fade" id="modal-order-edit" tabindex="-1" role="dialog" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content" style="padding:15px;">
                       <div class="modal-header">
@@ -244,11 +249,70 @@ Vue.component('edit-customer-modal', {
     }
 })
 
+Vue.component('create-customer-modal', {
+    template: `<div class="modal fade" id="modal-order-creation" tabindex="-1" role="dialog" aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Enter work order details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <form>
+                          <div class="form-group">
+                            <label>Customer name</label>
+                            <input v-model="customer_name" id="create-customer-name" type="text" class="form-control" placeholder="Enter customer name">
+                          </div>
+                          <div class="form-group">
+                            <label>Customer phone number</label>
+                            <input v-model="customer_phone" id="create-customer-phone" type="text" class="form-control" placeholder="Enter customer phone number">
+                          </div>
+                          <div class="form-group">
+                            <label>Repair summary</label>
+                            <textarea v-model="repair_summary" id="create-customer-repair" class="form-control" placeholder="(optional) Enter notes about the repair"></textarea>
+                          </div>
+                        </form>
+                      </div>
+                      <div class="modal-footer">
+                        <button @click="submitForm" data-dismiss="modal" type="button" class="btn btn-primary">Create</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>`,
+    methods: {
+        submitForm: function() {
+            axios.post('/new-work-order', {
+                "customer_name": this.customer_name,
+                "customer_phone": this.customer_phone,
+                "repair_summary": this.repair_summary
+            })
+
+            this.$eventHub.$emit('orderSubmitted');
+
+            // clear the fields
+            this.customer_name = "";
+            this.customer_phone = "";
+            this.repair_summary = "";
+        }
+    },
+    data: function() {
+        return {
+            "customer_name": "",
+            "customer_phone": "",
+            "repair_summary": ""
+        }
+    }
+})
+
 var deliveryView = new Vue({
     el: '#customers',
     template: `<div class="container">
                     <edit-customer-modal :activeCustomer="stagedCustomer" @modifyActiveCustomer="modifyActiveCustomer" @submitCustomerChanges="submitCustomerChanges" @completeOrder="completeOrder"/>
+                    <create-customer-modal/>
                     <customers :activeCustomer="activeCustomer" @setActiveCustomer="setActiveCustomer"/>
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#modal-order-creation">Create work order</button>
                 </div>`,
     methods: {
         setActiveCustomer: function(candidateCustomer) {

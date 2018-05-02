@@ -69,12 +69,20 @@ def index():
 def changeDate():
     shopWks = wksheets[session['shop']]
     data = request.get_json()
+    print(data)
 
+    # hash key in list of work orders
+    firebase_key = data['key']
     # update the date for the correct cell. Column name is I for date
-    for field, colLetter in {'date': 'I', 'price': 'K', 'repairSummary': 'L'}.items():
-        if field in data.keys():
-            cellAddr = colLetter + str(data['key'])
-            shopWks.update_cell(cellAddr, str(data[field]))
+    work_orders = db.reference('workOrders').child(firebase_key).update({
+        'date': data['date'],
+        'price': data['price'],
+        'repair_summary': data['repairSummary']
+        })
+    # for field, colLetter in {'date': 'I', 'price': 'K', 'repairSummary': 'L'}.items():
+    #     if field in data.keys():
+    #         cellAddr = colLetter + str(data['key'])
+    #         shopWks.update_cell(cellAddr, str(data[field]))
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 @app.route('/send-completion', methods=['POST'])
