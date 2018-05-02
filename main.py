@@ -73,16 +73,13 @@ def changeDate():
 
     # hash key in list of work orders
     firebase_key = data['key']
-    # update the date for the correct cell. Column name is I for date
-    work_orders = db.reference('workOrders').child(firebase_key).update({
-        'date': data['date'],
-        'price': data['price'],
-        'repair_summary': data['repairSummary']
-        })
-    # for field, colLetter in {'date': 'I', 'price': 'K', 'repairSummary': 'L'}.items():
-    #     if field in data.keys():
-    #         cellAddr = colLetter + str(data['key'])
-    #         shopWks.update_cell(cellAddr, str(data[field]))
+    updateObj = {}
+    for key in data.keys():
+        if key != "key": # key is the firebase key, copied into the client so that updates can happen to the right obj
+            updateObj[key] = data[key]
+
+    work_orders = db.reference('workOrders').child(firebase_key).update(updateObj)
+
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 @app.route('/send-completion', methods=['POST'])

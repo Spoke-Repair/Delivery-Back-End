@@ -8,7 +8,7 @@ Vue.component('customer-item', {
             <h5 style="display:inline-block;" class="card-title">{{customer.name}}</h5>
             <span class="font-weight-light float-right" v-if="customer.date">Est. {{formattedDate}}</span>
             <p>
-                <p v-if="customer.repairSummary">
+                <p v-if="customer.repair_summary">
                     <span v-for="line in delineatedSummary">{{line}}<br></span>
                 </p>
                 <span v-if="customer.price">$\{{customer.price}}</span><span v-else class="font-italic">Price not set</span>
@@ -35,7 +35,7 @@ Vue.component('customer-item', {
                 return this.customer.date;
         },
         'delineatedSummary': function() {
-            return this.customer.repairSummary.split('\n');
+            return this.customer.repair_summary.split('\n');
         }
     }
 })
@@ -60,7 +60,7 @@ Vue.component('customers', {
                         'date': curCustomer.eta_date == false ? undefined : new Date(curCustomer.eta_date),
                         'key': curCustomer.key,
                         'price': curCustomer.price == false ? undefined : Number(curCustomer.price),
-                        'repairSummary': curCustomer.repair_summary == false ? undefined : curCustomer.repair_summary,
+                        'repair_summary': curCustomer.repair_summary == false ? undefined : curCustomer.repair_summary,
                         'delivery_requested': curCustomer.delivery_requested == false ? undefined : curCustomer.delivery_requested
                     }
                     return curCustObj;
@@ -179,13 +179,13 @@ Vue.component('edit-summary', {
     props: ['activeCustomer'],
     template: `<div>
                     <div :class="{hide: editing}" class="input-group">
-                        <textarea id="edit-summary-input" class="form-control">{{activeCustomer.repairSummary}}</textarea>
+                        <textarea id="edit-summary-input" class="form-control">{{activeCustomer.repair_summary}}</textarea>
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" type="button" v-on:click="updateSummary">Save</button>
                         </div>
                     </div>
                     <p :class="{hide: !editing}">
-                        <span v-if="activeCustomer.repairSummary">{{activeCustomer.repairSummary}}</span>
+                        <span v-if="activeCustomer.repair_summary">{{activeCustomer.repair_summary}}</span>
                         <span v-else class="font-italic">(No repair summary)</span>
                         <a v-on:click="enterEditMode"><img class="float-right" src="imgs/edit.png"/></a>
                     </p>
@@ -197,12 +197,12 @@ Vue.component('edit-summary', {
     },
     methods: {
         enterEditMode: function() {
-            document.getElementById('edit-summary-input').value = this.activeCustomer.repairSummary || '';
+            document.getElementById('edit-summary-input').value = this.activeCustomer.repair_summary || '';
             this.editing = !this.editing;
         },
         updateSummary: function() {
             var inputDOMElem = document.getElementById('edit-summary-input');
-            this.modifyActiveCustomer({'repairSummary': inputDOMElem.value});
+            this.modifyActiveCustomer({'repair_summary': inputDOMElem.value});
             inputDOMElem.value = '';
             this.editing = !this.editing;
         },
@@ -212,7 +212,7 @@ Vue.component('edit-summary', {
     },
     data: function() {
         return {
-            'editing': this.activeCustomer.repairSummary == undefined
+            'editing': this.activeCustomer.repair_summary == undefined
         }
     }
 })
@@ -364,7 +364,7 @@ var deliveryView = new Vue({
                 'price': undefined,
                 'key': 0,
                 'completed': false,
-                'repairSummary': undefined
+                'repair_summary': undefined
             }
         }
     },
@@ -376,7 +376,7 @@ var deliveryView = new Vue({
                 'price': undefined,
                 'key': 0,
                 'completed': false,
-                'repairSummary': undefined
+                'repair_summary': undefined
             },
             'stagedCustomer': this.initStagedCustomer()
         }
