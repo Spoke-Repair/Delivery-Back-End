@@ -75,6 +75,8 @@ Vue.component('customers', {
     },
     mounted: function() {
         this.getOrders();
+
+        // refresh if an order has been submitted by "Create work order"
         this.$eventHub.$on('orderSubmitted', function(){
             this.getOrders();
         }.bind(this))
@@ -276,7 +278,7 @@ Vue.component('create-customer-modal', {
                         </form>
                       </div>
                       <div class="modal-footer">
-                        <button @click="submitForm" data-dismiss="modal" type="button" class="btn btn-primary">Create</button>
+                        <button @click="submitForm" :disabled="!readyToSubmit" data-dismiss="modal" type="button" class="btn btn-primary">Create</button>
                       </div>
                     </div>
                   </div>
@@ -302,6 +304,11 @@ Vue.component('create-customer-modal', {
             "customer_name": "",
             "customer_phone": "",
             "repair_summary": ""
+        }
+    },
+    computed: {
+        'readyToSubmit': function() {
+            return this.customer_name != "" && this.customer_phone != "";
         }
     }
 })
