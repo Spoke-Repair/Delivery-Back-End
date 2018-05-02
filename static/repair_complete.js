@@ -5,7 +5,7 @@ Vue.component('customer-item', {
     template: `
     <div class="card">
         <div class="card-body" v-bind:class="{'bg-light': customer.completed}">
-            <h5 style="display:inline-block;" class="card-title">{{customer.name}}</h5>
+            <h5 style="display:inline-block;" class="card-title">{{customer.customer_name}}</h5>
             <span class="font-weight-light float-right" v-if="customer.date">Est. {{formattedDate}}</span>
             <p>
                 <p v-if="customer.repair_summary">
@@ -55,7 +55,7 @@ Vue.component('customers', {
             axios.get('/get-orders').then(function(res) {
                 this.customers = res.data.map(function(curCustomer) {
                     var curCustObj = {
-                        'name': curCustomer.customer_name,
+                        'customer_name': curCustomer.customer_name,
                         'completed': curCustomer.completed == true,
                         'date': curCustomer.eta_date == false ? undefined : new Date(curCustomer.eta_date),
                         'key': curCustomer.key,
@@ -359,7 +359,7 @@ var deliveryView = new Vue({
         },
         initStagedCustomer: function() {
             return {
-                'name': "",
+                'customer_name': "",
                 'date': undefined,
                 'price': undefined,
                 'key': 0,
@@ -371,7 +371,7 @@ var deliveryView = new Vue({
     data: function() {
         return {
             'activeCustomer': {
-                'name': "",
+                'customer_name': "",
                 'date': undefined,
                 'price': undefined,
                 'key': 0,
