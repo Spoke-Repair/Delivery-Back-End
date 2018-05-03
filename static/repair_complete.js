@@ -237,7 +237,7 @@ Vue.component('edit-customer-modal', {
                   <div class="modal-dialog" role="document">
                     <div class="modal-content" style="padding:15px;">
                       <div class="modal-header">
-                        <h5 class="modal-title">Edit info for {{activeCustomer.name}}</h5>
+                        <h5 class="modal-title">Edit info for {{activeCustomer.customer_name}}</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                           <span aria-hidden="true">&times;</span>
                         </button>
