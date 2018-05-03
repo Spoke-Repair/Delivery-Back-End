@@ -8,14 +8,19 @@ import requests
 import os
 import json
 from twilio.rest import Client
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
+from authenticate import load_firebase_credentials_into_json
+from datetime import datetime
+import dateutil.parser
 
 from flask import jsonify
 # [END imports]
 
 # [START create_app]
 app = Flask(__name__, static_folder='static', static_url_path='')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or \
-    'e5ac358c-f0bf-11e5-9e39-d3b532c10a28'
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY')
 
 # stored in private credentials file that isn't uploaded to repo.
 # For information on how heroku stores it, see
@@ -23,17 +28,26 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or \
 twilio_sid, twilio_auth_token = os.environ.get('TWILIO_SID'), os.environ.get('TWILIO_AUTH_TOKEN')
 twilioClient = Client(twilio_sid, twilio_auth_token)
 
+load_firebase_credentials_into_json()
+cred = credentials.Certificate('firebase-service-acc-creds.json')
+firebase_admin.initialize_app(cred, {'databaseURL': 'https://spoke-ops-tool.firebaseio.com/'})
+
+fb_globals_ref = db.reference('globals').get()
+twilio_to_number, twilio_from_number = fb_globals_ref['twilio_to_number'], fb_globals_ref['twilio_from_number']
+sh_key = fb_globals_ref['typeform_response_sheet_id']
+
 # [END create_app]
 
 # for documentation on setting up pygsheets:
 # https://github.com/nithinmurali/pygsheets
 import pygsheets
 gc = pygsheets.authorize(outh_nonlocal=True, outh_file="sheets.googleapis.com-python.json", no_cache=True)
-sh = gc.open_by_key('1H1M2lmPzEzVISCp5PsK98UZCuuoTSeL1rthw8wHeZME')
+sh = gc.open_by_key(sh_key)
 
 # TODO: store these in a database rather than keeping track of all shops via hardcoded list of them.
 wksheets = {'WLC': sh.worksheet_by_title('Spoke Delivery (Waterloo)')}
 shopNames = {'WLC': 'Waterloo Cycles'}
+shopURLS = {'WLC': 'bit.ly/spokeWLC'}
 
 # initialize data
 cells = {'WLC': wksheets['WLC'].range('A2:L100', returnas="range")}
@@ -50,41 +64,23 @@ def server_error(e):
 
 @app.route('/')
 def index():
-    return send_from_directory(app.static_folder, 'landing_page_assets/index.html')
-
-@app.route('/customer-data')
-def customerData():
-    shopCells = cells[session['shop']]
-    # cell.fetch() was already called to update the DataRange in /complete.
-    # but now they have to be formatted to send to the frontend.
-    entries = []
-
-    # grab the last row number from the range string. i.e. A1:J100 --> 100
-    # subtract header rows.
-    length = int(shopCells.range.split(':')[1][1:]) - 2
-    for idx in range(length):
-        row = shopCells[idx]
-        if not row[0].value:
-            continue
-        curCustomer = {'name': row[0].value + ' ' + row[1].value, \
-                        'completed': row[9].value, \
-                        'eta_date': row[8].value, \
-                        'price': row[10].value, \
-                        'repair_summary': row[11].value, \
-                        'row_number': idx + 2}
-        entries.append(curCustomer)
-    return jsonify(entries)
+    return send_from_directory(app.static_folder, 'placeholder_landing_page/index.html')
 
 @app.route('/change-customer', methods=['POST'])
 def changeDate():
     shopWks = wksheets[session['shop']]
     data = request.get_json()
+    print(data)
 
-    # update the date for the correct cell. Column name is I for date
-    for field, colLetter in {'date': 'I', 'price': 'K', 'repairSummary': 'L'}.items():
-        if field in data.keys():
-            cellAddr = colLetter + str(data['key'])
-            shopWks.update_cell(cellAddr, str(data[field]))
+    # hash key in list of work orders
+    firebase_key = data['key']
+    updateObj = {}
+    for key in data.keys():
+        if key != "key": # key is the firebase key, copied into the client so that updates can happen to the right obj
+            updateObj[key] = data[key]
+
+    work_orders = db.reference('workOrders').child(firebase_key).update(updateObj)
+
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
 
 @app.route('/send-completion', methods=['POST'])
@@ -97,8 +93,8 @@ def sendCompletion():
 
     smsBody = shopNames[session['shop']] + ' completed a repair for ' + data['name']
     twilioClient.api.account.messages.create(
-        to="+12104833330",
-        from_="+18316618982",
+        to=twilio_to_number,
+        from_=twilio_from_number,
         body=smsBody)
 
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}
@@ -110,6 +106,70 @@ def complete():
     # reload the data when the page is refreshed
     cells[session['shop']].fetch()
     return render_template('repair_complete.html', shopName=shopNames[session['shop']])
+
+@app.route('/get-orders')
+def getOrders():
+    # fetch orders from firebase
+    work_orders = db.reference('workOrders').order_by_child('shop_key').equal_to(session['shop']).get()
+    work_orders_list = []
+    for key, val in work_orders.items():
+        val['key'] = key
+        work_orders_list.append(val)
+
+    # fetch records from google sheets, to mark orders that require delivery.
+    
+    # begin by grabbing the phone numbers
+    shopCells = cells[session['shop']]
+    # cell.fetch() was already called to update the DataRange in /complete.
+    # but now they have to be formatted to send to the frontend.
+
+    # grab the last row number from the range string. i.e. A1:J100 --> 100
+    # subtract header rows.
+    phones = {}
+    length = int(shopCells.range.split(':')[1][1:]) - 2
+    for idx in range(length):
+        row = shopCells[idx]
+        if not row[0].value:
+            continue
+        curPhoneNum, submitDate = row[3].value, row[6].value
+        phones[curPhoneNum] = submitDate
+
+    for order in work_orders_list:
+        curPhone = order['customer_phone']
+        if curPhone in phones:
+            # heuristic: only consider delivery requests as valid for a particular customer if the customer submitted
+            # the request within 10 days of the shop's order creation.
+            if abs((dateutil.parser.parse(order['creation_date']) - dateutil.parser.parse(phones[curPhone])).days) <= 10:
+                order['delivery_requested'] = True
+            else:
+                order['delivery_requested'] = False
+
+    return jsonify(work_orders_list)
+
+@app.route('/new-work-order', methods=["POST"])
+def newWorkOrder():
+    orderData = request.get_json()
+    order = db.reference('workOrders').push()
+    order.set({
+        'shop_key': session['shop'],
+        'customer_name': orderData['customer_name'],
+        'customer_phone': orderData['customer_phone'],
+        'repair_summary': orderData['repair_summary'],
+        'completed': False,
+        'eta_date': False,
+        'price': False,
+        'creation_date': str(datetime.now())
+        })
+
+    messageBody = "Hi %s, thanks for visiting %s! If you'd like your bike delivered with Spoke once the repair is finished, let them know at %s" % (\
+        orderData['customer_name'].split(" ")[0], shopNames[session['shop']], shopURLS[session['shop']])
+
+    twilioClient.api.account.messages.create(
+        to=orderData['customer_phone'],
+        from_=twilio_from_number,
+        body=messageBody)
+
+    return 'ok'
 
 @app.route('/wakemydyno.txt')
 def wakemydyno():
