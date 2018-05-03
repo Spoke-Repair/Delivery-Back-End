@@ -32,7 +32,7 @@ Vue.component('customer-item', {
             this.customer.completed = true;
             axios.post('/send-completion', this.customer)
         }
-    },
+    },  
     computed: {
         'formattedDate': function() {
             if (this.customer.date != "")
@@ -69,7 +69,6 @@ Vue.component('customers', {
                         'repair_summary': curCustomer.repair_summary == false ? undefined : curCustomer.repair_summary,
                         'delivery_requested': curCustomer.delivery_requested == false ? undefined : curCustomer.delivery_requested
                     }
-                    console.log(curCustObj['delivery_requested'])
                     return curCustObj;
                 })
             }.bind(this));

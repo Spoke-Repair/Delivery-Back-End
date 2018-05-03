@@ -64,7 +64,7 @@ def server_error(e):
 
 @app.route('/')
 def index():
-    return send_from_directory(app.static_folder, 'landing_page_assets/index.html')
+    return send_from_directory(app.static_folder, 'placeholder_landing_page/index.html')
 
 @app.route('/change-customer', methods=['POST'])
 def changeDate():
