@@ -5,22 +5,26 @@ Vue.component('customer-item', {
     template: `
     <div class="card">
         <div class="card-body" v-bind:class="{'bg-light': customer.completed}">
-            <h5 style="display:inline-block;" class="card-title">{{customer.customer_name}}</h5>
-            <span class="font-weight-light float-right" v-if="customer.date">Est. {{formattedDate}}</span>
-            <p>
-                <p v-if="customer.repair_summary">
-                    <span v-for="line in delineatedSummary">{{line}}<br></span>
-                </p>
-                <p>
-                    <span v-if="customer.price">$\{{customer.price}}</span><span v-else class="font-italic">Price not set</span>
-                    <span v-if="customer.completed" class="font-italic float-right">(Completed)</span>
-                    <a v-else href="#" class="card-link float-right" v-on:click="setActiveCustomer" data-target="#modal-order-edit" data-toggle="modal">Edit</a>
-                </p>
-                <p>
-                    <span v-if="!customer.delivery_requested" class="badge badge-pill badge-secondary float-right disabled">Awaiting delivery response</span>
-                    <span v-else class="badge badge-pill badge-primary float-right">Delivery requested</span>
-                </p>
+            <div class="row">
+                <div class="col-4">
+                    <h5 style="display:inline-block;" class="card-title">{{abbrev_name}}</h5>
+                </div>
+                <div class="col-6">
+                    <span class="text-secondary" v-if="customer.eta_date">Est. {{formattedDate}}</span>
+                </div>
+                <div class="col-2">
+                    <span class="float-right">$<span v-if="customer.price">{{customer.price}}</span><span v-else class="font-italic">xx.xx</span></span>
+                </div>
+            </div>
+            <p v-if="customer.repair_summary">
+                <span v-for="line in delineatedSummary">{{line}}<br></span>
             </p>
+            <br v-else>
+            <span v-if="!customer.delivery_requested" class="badge badge-pill badge-secondary disabled">Awaiting delivery response</span>
+            <span v-else class="badge badge-pill badge-primary">Delivery requested</span>
+            
+            <span v-if="customer.completed" class="font-italic float-right">(Completed)</span>
+            <a v-else href="#" class="card-link float-right" v-on:click="setActiveCustomer" data-target="#modal-order-edit" data-toggle="modal">Edit</a>
         </div>
     </div>`,
     methods: {
@@ -32,16 +36,20 @@ Vue.component('customer-item', {
             this.customer.completed = true;
             axios.post('/send-completion', this.customer)
         }
-    },  
+    },
     computed: {
         'formattedDate': function() {
-            if (this.customer.date != "")
-                return this.customer.date.toLocaleDateString('en-US')
+            if (this.customer.eta_date != "")
+                return this.customer.eta_date.toLocaleDateString('en-US', {month: "2-digit", day: "2-digit", year: "2-digit"})
             else
-                return this.customer.date;
+                return this.customer.eta_date;
         },
         'delineatedSummary': function() {
             return this.customer.repair_summary.split('\n');
+        },
+        'abbrev_name': function() {
+            var splitName = this.customer.customer_name.split(" ");
+            return splitName[0] + " " + splitName[1][0] + ".";
         }
     }
 })
@@ -63,7 +71,7 @@ Vue.component('customers', {
                     var curCustObj = {
                         'customer_name': curCustomer.customer_name,
                         'completed': curCustomer.completed == true,
-                        'date': curCustomer.eta_date == false ? undefined : new Date(curCustomer.eta_date),
+                        'eta_date': curCustomer.eta_date == false ? undefined : new Date(curCustomer.eta_date),
                         'key': curCustomer.key,
                         'price': curCustomer.price == false ? undefined : Number(curCustomer.price),
                         'repair_summary': curCustomer.repair_summary == false ? undefined : curCustomer.repair_summary,
@@ -95,7 +103,7 @@ Vue.component('edit-date', {
                 <div v-bind:class="{hide: editing}" id="datepicker">
                 </div>
                 <p v-bind:class="{hide: !editing}">
-                    <span>Est. completion: <span v-if="this.activeCustomer.date">{{formattedDate}}</span><span v-else class="font-italic">(Not set)</span></span>
+                    <span>Est. completion: <span v-if="this.activeCustomer.eta_date">{{formattedDate}}</span><span v-else class="font-italic">(Not set)</span></span>
                     <a v-on:click="toggleEditing"><img class="float-right" src="imgs/edit.png"/></a>
                 </p>
                 </div>`,
@@ -103,7 +111,7 @@ Vue.component('edit-date', {
         $('#datepicker').datepicker({
             inline: true,
             onSelect: function(dateText, inst) {
-                this.modifyActiveCustomer({'date': new Date(dateText)})
+                this.modifyActiveCustomer({'eta_date': new Date(dateText)})
                 this.toggleEditing()
             }.bind(this)
         });
@@ -122,13 +130,13 @@ Vue.component('edit-date', {
     },
     data: function() {
         return {
-            'editing': this.activeCustomer.date == undefined,
+            'editing': this.activeCustomer.eta_date == undefined,
         }
     },
     computed: {
         'formattedDate': function() {
-            if (this.activeCustomer.date)
-                return this.activeCustomer.date.toLocaleDateString('en-US')
+            if (this.activeCustomer.eta_date)
+                return this.activeCustomer.eta_date.toLocaleDateString('en-US')
             else
                 return undefined;
         }
@@ -356,6 +364,7 @@ var deliveryView = new Vue({
                     this.activeCustomer[dirtyProp] = this.stagedCustomer[dirtyProp];
                 }
             }
+            console.log(this.activeCustomer)
             axios.post('/change-customer', this.activeCustomer);
         },
         completeOrder: function() {
@@ -366,7 +375,7 @@ var deliveryView = new Vue({
         initStagedCustomer: function() {
             return {
                 'customer_name': "",
-                'date': undefined,
+                'eta_date': undefined,
                 'price': undefined,
                 'key': 0,
                 'completed': false,
@@ -378,7 +387,7 @@ var deliveryView = new Vue({
         return {
             'activeCustomer': {
                 'customer_name': "",
-                'date': undefined,
+                'eta_date': undefined,
                 'price': undefined,
                 'key': 0,
                 'completed': false,
