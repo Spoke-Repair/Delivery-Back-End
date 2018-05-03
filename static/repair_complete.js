@@ -3,7 +3,7 @@ Vue.prototype.$eventHub = new Vue();
 Vue.component('customer-item', {
     props: ['customer'],
     template: `
-    <div class="card">
+    <div class="card mt-2">
         <div class="card-body" v-bind:class="{'bg-light': customer.completed}">
             <div class="row">
                 <div class="col-4">
@@ -20,8 +20,8 @@ Vue.component('customer-item', {
                 <span v-for="line in delineatedSummary">{{line}}<br></span>
             </p>
             <br v-else>
-            <span v-if="!customer.delivery_requested" class="badge badge-pill badge-secondary disabled">Awaiting delivery response</span>
-            <span v-else class="badge badge-pill badge-primary">Delivery requested</span>
+            <span v-if="!customer.delivery_requested" class="badge badge-secondary disabled">Awaiting delivery response</span>
+            <span v-else class="badge badge-warning">Delivery requested</span>
             
             <span v-if="customer.completed" class="font-italic float-right">(Completed)</span>
             <a v-else href="#" class="card-link float-right" v-on:click="setActiveCustomer" data-target="#modal-order-edit" data-toggle="modal">Edit</a>
@@ -333,7 +333,9 @@ var deliveryView = new Vue({
                     <edit-customer-modal :activeCustomer="stagedCustomer" @modifyActiveCustomer="modifyActiveCustomer" @submitCustomerChanges="submitCustomerChanges" @completeOrder="completeOrder"/>
                     <create-customer-modal/>
                     <customers :activeCustomer="activeCustomer" @setActiveCustomer="setActiveCustomer"/>
-                    <button class="btn btn-primary" data-toggle="modal" data-target="#modal-order-creation">Create work order</button>
+                    <div style="width:100%;" class="text-center">
+                        <button class="mt-4 btn btn-primary" data-toggle="modal" data-target="#modal-order-creation">Create work order</button>
+                    </div>
                 </div>`,
     methods: {
         setActiveCustomer: function(candidateCustomer) {
