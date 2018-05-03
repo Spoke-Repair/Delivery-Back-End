@@ -47,6 +47,7 @@ sh = gc.open_by_key(sh_key)
 # TODO: store these in a database rather than keeping track of all shops via hardcoded list of them.
 wksheets = {'WLC': sh.worksheet_by_title('Spoke Delivery (Waterloo)')}
 shopNames = {'WLC': 'Waterloo Cycles'}
+shopURLS = {'WLC': 'bit.ly/spokeWLC'}
 
 # initialize data
 cells = {'WLC': wksheets['WLC'].range('A2:L100', returnas="range")}
@@ -159,6 +160,15 @@ def newWorkOrder():
         'price': False,
         'creation_date': str(datetime.now())
         })
+
+    messageBody = "Hi %s, thanks for visiting %s! If you'd like your bike delivered with Spoke once the repair is finished, let them know at %s" % (\
+        orderData['customer_name'].split(" ")[0], shopNames[session['shop']], shopURLS[session['shop']])
+
+    twilioClient.api.account.messages.create(
+        to=orderData['customer_phone'],
+        from_=twilio_from_number,
+        body=messageBody)
+
     return 'ok'
 
 @app.route('/wakemydyno.txt')

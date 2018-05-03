@@ -11,9 +11,15 @@ Vue.component('customer-item', {
                 <p v-if="customer.repair_summary">
                     <span v-for="line in delineatedSummary">{{line}}<br></span>
                 </p>
-                <span v-if="customer.price">$\{{customer.price}}</span><span v-else class="font-italic">Price not set</span>
-                <span v-if="customer.completed" class="font-italic float-right">(Completed)</span>
-                <a v-else href="#" class="card-link float-right" v-on:click="setActiveCustomer" data-target="#modal-order-edit" data-toggle="modal">Edit</a>
+                <p>
+                    <span v-if="customer.price">$\{{customer.price}}</span><span v-else class="font-italic">Price not set</span>
+                    <span v-if="customer.completed" class="font-italic float-right">(Completed)</span>
+                    <a v-else href="#" class="card-link float-right" v-on:click="setActiveCustomer" data-target="#modal-order-edit" data-toggle="modal">Edit</a>
+                </p>
+                <p>
+                    <span v-if="!customer.delivery_requested" class="badge badge-pill badge-secondary float-right disabled">Awaiting delivery response</span>
+                    <span v-else class="badge badge-pill badge-primary float-right">Delivery requested</span>
+                </p>
             </p>
         </div>
     </div>`,
@@ -63,6 +69,7 @@ Vue.component('customers', {
                         'repair_summary': curCustomer.repair_summary == false ? undefined : curCustomer.repair_summary,
                         'delivery_requested': curCustomer.delivery_requested == false ? undefined : curCustomer.delivery_requested
                     }
+                    console.log(curCustObj['delivery_requested'])
                     return curCustObj;
                 })
             }.bind(this));
